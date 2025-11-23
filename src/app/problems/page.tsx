@@ -131,11 +131,10 @@ export default function ProblemsPage() {
       } finally {
         setIsLoading(false);
       }
-    }
+    };
 
     loadProblems();
   }, []);
-
 
   const filteredProblems = useMemo(() => {
     let filtered = [...problems];
