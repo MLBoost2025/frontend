@@ -1,5 +1,6 @@
 export interface Problem {
   id: string;
+  slug?: string; // Added for routing
   title: string;
   difficulty: "Easy" | "Medium" | "Hard";
   category: string;

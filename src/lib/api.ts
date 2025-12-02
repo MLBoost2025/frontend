@@ -1,7 +1,7 @@
 import { Problem } from "@/types";
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+// Update to match your backend port (5001)
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api";
 
 export async function fetchProblems(): Promise<Problem[]> {
   try {
@@ -9,6 +9,7 @@ export async function fetchProblems(): Promise<Problem[]> {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
+        // Add Authorization header if you implement protected problem lists later
       },
     });
 
@@ -17,123 +18,52 @@ export async function fetchProblems(): Promise<Problem[]> {
     }
 
     const data = await response.json();
-    return data;
+    
+    // Map Backend Data (MongoDB _id) to Frontend Interface
+    return data.map((item: any) => ({
+      id: item._id, // Map _id to id
+      slug: item.slug, // Important for routing
+      title: item.title,
+      difficulty: item.difficulty,
+      // Fallback for fields not yet in backend
+      category: item.tags?.[0] || "General", 
+      acceptance: 0, // Backend doesn't calculate this yet
+      status: "unsolved", // Needs user-specific fetch
+      tags: item.tags || []
+    }));
   } catch (error) {
     console.error("Error fetching problems:", error);
-    throw error;
+    return [];
   }
 }
 
-export async function fetchProblemById(problemId: string): Promise<Problem> {
+export async function fetchProblemBySlug(slug: string): Promise<any> {
   try {
-    const response = await fetch(`${API_BASE_URL}/problems/${problemId}`, {
+    const response = await fetch(`${API_BASE_URL}/problems/${slug}`, {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
     });
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch problem");
-    }
-
-    const data = await response.json();
-    return data;
+    if (!response.ok) throw new Error("Failed to fetch problem");
+    return await response.json();
   } catch (error) {
     console.error("Error fetching problem:", error);
     throw error;
   }
 }
 
-export async function fetchProblemsByCategory(
-  category: string
-): Promise<Problem[]> {
-  try {
-    const response = await fetch(
-      `${API_BASE_URL}/problems?category=${encodeURIComponent(category)}`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch problems by category");
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error("Error fetching problems by category:", error);
-    throw error;
-  }
-}
-
-export async function fetchUserStats(): Promise<unknown> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/user/stats`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to fetch user stats");
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error("Error fetching user stats:", error);
-    throw error;
-  }
-}
-
 export async function submitSolution(
   problemId: string,
-  solution: string
-): Promise<unknown> {
-  try {
-    const response = await fetch(
-      `${API_BASE_URL}/problems/${problemId}/submit`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ solution }),
-      }
-    );
-
-    if (!response.ok) {
-      throw new Error("Failed to submit solution");
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error("Error submitting solution:", error);
-    throw error;
-  }
-}
-
-export async function logout(): Promise<void> {
-  try {
-    const response = await fetch(`${API_BASE_URL}/auth/logout`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error("Failed to logout");
-    }
-  } catch (error) {
-    console.error("Error during logout:", error);
-    throw error;
-  }
+  code: string,
+  languageId: number,
+  token: string
+): Promise<any> {
+  const response = await fetch(`${API_BASE_URL}/submissions`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${token}` // Secure submission
+    },
+    body: JSON.stringify({ problemId, code, languageId }),
+  });
+  return await response.json();
 }

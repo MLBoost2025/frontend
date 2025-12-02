@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
+import { useRouter } from "next/navigation"; // Use Next.js router
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
 import ProblemsTable from "../components/ProblemsTable";
@@ -102,6 +103,8 @@ const SAMPLE_PROBLEMS: Problem[] = [
 ];
 
 export default function ProblemsPage() {
+  const router = useRouter();
+
   const [problems, setProblems] = useState<Problem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [filters, setFilters] = useState<FilterState>({
@@ -339,7 +342,13 @@ export default function ProblemsPage() {
           ) : (
             <ProblemsTable
               problems={filteredProblems}
-              onProblemClick={(id) => console.log("Navigate to problem:", id)}
+              // navigate to dynamic slug page instead of just logging id
+              onProblemClick={(id) => {
+                const problem = problems.find((p) => p.id === id);
+                if (problem?.slug) {
+                  router.push(`/problems/${problem.slug}`);
+                }
+              }}
             />
           )}
         </main>
