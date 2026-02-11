@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 
 interface User {
@@ -20,29 +20,32 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [token, setToken] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
-  useEffect(() => {
-    // Rehydrate session on load
-    const storedToken = localStorage.getItem("accessToken");
-    const storedUser = localStorage.getItem("user");
-    
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
+  // ✅ Lazy initialization (runs only once)
+  const [token, setToken] = useState<string | null>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("accessToken");
     }
-    setIsLoading(false);
-  }, []);
+    return null;
+  });
+
+  const [user, setUser] = useState<User | null>(() => {
+    if (typeof window !== "undefined") {
+      const storedUser = localStorage.getItem("user");
+      return storedUser ? JSON.parse(storedUser) : null;
+    }
+    return null;
+  });
+
+  const [isLoading] = useState(false); // no longer needed
 
   const login = (newToken: string, userData: User) => {
     localStorage.setItem("accessToken", newToken);
     localStorage.setItem("user", JSON.stringify(userData));
     setToken(newToken);
     setUser(userData);
-    router.push("/"); // Redirect to dashboard
+    router.push("/");
   };
 
   const logout = () => {
