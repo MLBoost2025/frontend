@@ -1,27 +1,38 @@
+import type { Metadata } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Inter } from "next/font/google";
-import { AuthProvider } from "@/context/AuthContext";
-import { Toaster } from "react-hot-toast";
+import { Providers } from "./providers";
+import WebVitalsReporter from "./WebVitalsReporter";
 
-const inter = Inter({ subsets: ["latin"] });
+const geistSans = Geist({
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+});
 
-export const metadata = {
-  title: "MLBoost - LeetCode for Machine Learning",
-  description: "Master Machine Learning through practice problems.",
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+export const metadata: Metadata = {
+  title: "MLBoost",
+  description: "Interactive ML coding practice platform",
 };
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
-    <html lang="en">
-      <body className={inter.className}>
-        <AuthProvider>
-          <Toaster position="top-center" />
+    <html lang="en" suppressHydrationWarning>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        <Providers>
+          <WebVitalsReporter />
           {children}
-        </AuthProvider>
+        </Providers>
       </body>
     </html>
   );

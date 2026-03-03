@@ -12,56 +12,61 @@ interface RecentActivityProps {
   activities: ActivityItem[];
 }
 
-export default function RecentActivity({ activities }: RecentActivityProps) {
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case "Easy":
-        return "bg-green-50 text-green-700 border border-green-200";
-      case "Medium":
-        return "bg-yellow-50 text-yellow-700 border border-yellow-200";
-      case "Hard":
-        return "bg-red-50 text-red-700 border border-red-200";
-      default:
-        return "bg-gray-50 text-gray-700 border border-gray-200";
-    }
-  };
+function difficultyClasses(difficulty: ActivityItem["difficulty"]): string {
+  if (difficulty === "Easy") {
+    return "text-emerald-600 dark:text-emerald-300";
+  }
+  if (difficulty === "Medium") {
+    return "text-amber-600 dark:text-amber-300";
+  }
+  return "text-rose-600 dark:text-rose-300";
+}
 
+export default function RecentActivity({ activities }: RecentActivityProps) {
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <h2 className="text-xl font-bold text-gray-900 mb-6">Recent Activity</h2>
-      <div className="space-y-0">
-        {activities.map((activity, index) => (
-          <div
+    <section className="rounded-xl border border-zinc-200 bg-white/90 p-5 backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/80">
+      <div className="mb-4 flex items-center justify-between">
+        <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
+          Recent Activity
+        </h2>
+        <button className="text-xs font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100">
+          View all
+        </button>
+      </div>
+
+      <div className="space-y-3">
+        {activities.map((activity) => (
+          <article
             key={activity.id}
-            className={`border-b border-gray-200 last:border-b-0 p-3 ${
-              index % 2 === 0 ? "bg-white" : "bg-gray-50"
-            }`}
+            className="rounded-lg border border-zinc-200 px-4 py-3 dark:border-zinc-800"
           >
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                <h3 className="text-sm font-semibold text-gray-900 mb-1">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
                   {activity.title}
-                </h3>
-                <div className="flex items-center gap-3">
-                  <span
-                    className={`inline-flex px-2 py-0.5 text-xs font-medium rounded ${getDifficultyColor(
-                      activity.difficulty
-                    )}`}
-                  >
+                </p>
+                <div className="mt-1 flex items-center gap-3 text-xs">
+                  <span className={difficultyClasses(activity.difficulty)}>
                     {activity.difficulty}
                   </span>
-                  <span className="text-sm text-gray-600">
+                  <span className="text-zinc-500 dark:text-zinc-400">
                     {activity.status}
                   </span>
                 </div>
               </div>
-              <button className="px-4 py-2 text-sm font-medium text-gray-900 hover:bg-gray-50 rounded-lg transition-colors">
+              <button className="text-xs font-medium text-zinc-600 hover:text-zinc-900 dark:text-zinc-300 dark:hover:text-zinc-100">
                 Continue
               </button>
             </div>
-          </div>
+            <div className="mt-3 h-1.5 rounded-full bg-zinc-200 dark:bg-zinc-800">
+              <div
+                className="h-1.5 rounded-full bg-orange-500"
+                style={{ width: `${activity.progress}%` }}
+              />
+            </div>
+          </article>
         ))}
       </div>
-    </div>
+    </section>
   );
 }
