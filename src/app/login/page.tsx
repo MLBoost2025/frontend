@@ -1,77 +1,192 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
+import { FormEvent, Suspense, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Loader2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import toast from "react-hot-toast";
+import ThemeSwitcher from "@/app/components/ThemeSwitcher";
 
-export default function LoginPage() {
-  const { login } = useAuth();
+type AuthMode = "login" | "signup";
+
+function sanitizeRedirect(path: string | null): string {
+  if (!path || !path.startsWith("/")) {
+    return "/problems";
+  }
+  if (path.startsWith("//")) {
+    return "/problems";
+  }
+  return path;
+}
+
+function LoginForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { login, signup, isLoading } = useAuth();
+
+  const [mode, setMode] = useState<AuthMode>("login");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
+  const redirectTo = useMemo(
+    () => sanitizeRedirect(searchParams.get("redirect")),
+    [searchParams]
+  );
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setErrorMessage("");
+
+    const trimmedEmail = email.trim();
+    const trimmedPassword = password.trim();
+    const trimmedName = name.trim();
+
+    if (!trimmedEmail || !trimmedPassword) {
+      setErrorMessage("Email and password are required.");
+      return;
+    }
+    if (mode === "signup" && !trimmedName) {
+      setErrorMessage("Name is required for signup.");
+      return;
+    }
 
     try {
-      // Replace with actual API call
-      // const res = await fetch(`${API_URL}/auth/login`, ...);
-      
-      // MOCK RESPONSE for MVP testing
-      await new Promise(r => setTimeout(r, 1000)); 
-      if (email === "student@nst.edu" && password === "password") {
-        login("mock-jwt-token-123", { id: "1", name: "Birajit Saikia", email });
-        toast.success("Welcome back!");
+      if (mode === "login") {
+        await login({ email: trimmedEmail, password: trimmedPassword });
       } else {
-        throw new Error("Invalid credentials");
+        await signup({
+          name: trimmedName,
+          email: trimmedEmail,
+          password: trimmedPassword,
+        });
       }
-    } catch (err) {
-      toast.error("Login failed. Check your credentials.");
-    } finally {
-      setIsLoading(false);
+      router.replace(redirectTo);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Unable to authenticate.";
+      setErrorMessage(message);
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full space-y-8 p-8 bg-white rounded-xl shadow-lg border border-gray-100">
-        <div className="text-center">
-          <h2 className="text-3xl font-extrabold text-gray-900">Sign in to MLBoost</h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Or <Link href="/signup" className="font-medium text-blue-600 hover:text-blue-500">create a new account</Link>
+    <main className="relative flex min-h-screen items-center justify-center bg-zinc-100 px-4 py-12 dark:bg-zinc-950">
+      <div className="absolute right-4 top-4">
+        <ThemeSwitcher />
+      </div>
+      <div className="w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="mb-8">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400">
+            MLBoost
+          </p>
+          <h1 className="mt-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
+            {mode === "login" ? "Sign in to continue" : "Create your account"}
+          </h1>
+          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
+            Practice ML coding with instant feedback.
           </p>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
+
+        <div className="mb-6 grid grid-cols-2 rounded-lg border border-zinc-200 bg-zinc-100 p-1 dark:border-zinc-700 dark:bg-zinc-800">
+          <button
+            type="button"
+            className={`rounded-md px-3 py-2 text-sm font-medium transition ${
+              mode === "login"
+                ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-700 dark:text-zinc-100"
+                : "text-zinc-600 hover:text-zinc-800 dark:text-zinc-300 dark:hover:text-zinc-100"
+            }`}
+            onClick={() => setMode("login")}
+          >
+            Login
+          </button>
+          <button
+            type="button"
+            className={`rounded-md px-3 py-2 text-sm font-medium transition ${
+              mode === "signup"
+                ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-700 dark:text-zinc-100"
+                : "text-zinc-600 hover:text-zinc-800 dark:text-zinc-300 dark:hover:text-zinc-100"
+            }`}
+            onClick={() => setMode("signup")}
+          >
+            Sign up
+          </button>
+        </div>
+
+        <form className="space-y-4" onSubmit={handleSubmit}>
+          {mode === "signup" && (
+            <label className="block">
+              <span className="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-200">
+                Name
+              </span>
+              <input
+                required
+                type="text"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none ring-blue-500 transition placeholder:text-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+                placeholder="Ada Lovelace"
+              />
+            </label>
+          )}
+
+          <label className="block">
+            <span className="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-200">
+              Email
+            </span>
             <input
+              required
               type="email"
-              required
-              className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-              placeholder="Email address"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(event) => setEmail(event.target.value)}
+              className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none ring-blue-500 transition placeholder:text-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+              placeholder="you@example.com"
             />
+          </label>
+
+          <label className="block">
+            <span className="mb-1.5 block text-sm font-medium text-zinc-700 dark:text-zinc-200">
+              Password
+            </span>
             <input
-              type="password"
               required
-              className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm"
-              placeholder="Password"
+              type="password"
               value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              onChange={(event) => setPassword(event.target.value)}
+              className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none ring-blue-500 transition placeholder:text-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+              placeholder="••••••••"
             />
-          </div>
+          </label>
+
+          {errorMessage && (
+            <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
+              {errorMessage}
+            </p>
+          )}
 
           <button
             type="submit"
             disabled={isLoading}
-            className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-black hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black disabled:opacity-50"
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
           >
-            {isLoading ? "Signing in..." : "Sign in"}
+            {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+            {mode === "login" ? "Sign in" : "Create account"}
           </button>
         </form>
       </div>
-    </div>
+    </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen items-center justify-center bg-zinc-100 text-zinc-700 dark:bg-zinc-950 dark:text-zinc-300">
+          Loading authentication...
+        </main>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }

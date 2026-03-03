@@ -1,70 +1,103 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from "react";
-import { useRouter } from "next/navigation";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import { AuthSession, LoginPayload, SignupPayload, User } from "@/types";
+import {
+  getCurrentSession,
+  loginUser,
+  logoutUser,
+  signupUser,
+} from "@/lib/api";
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-}
-
-interface AuthContextType {
+interface AuthContextValue {
   user: User | null;
-  token: string | null;
-  login: (token: string, userData: User) => void;
-  logout: () => void;
+  session: AuthSession | null;
+  isAuthenticated: boolean;
   isLoading: boolean;
+  login: (payload: LoginPayload) => Promise<void>;
+  signup: (payload: SignupPayload) => Promise<void>;
+  logout: () => Promise<void>;
+  refreshSession: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<AuthContextValue | null>(null);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const router = useRouter();
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [session, setSession] = useState<AuthSession | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // ✅ Lazy initialization (runs only once)
-  const [token, setToken] = useState<string | null>(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("accessToken");
+  const refreshSession = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const currentSession = await getCurrentSession();
+      setSession(currentSession);
+    } finally {
+      setIsLoading(false);
     }
-    return null;
-  });
+  }, []);
 
-  const [user, setUser] = useState<User | null>(() => {
-    if (typeof window !== "undefined") {
-      const storedUser = localStorage.getItem("user");
-      return storedUser ? JSON.parse(storedUser) : null;
+  useEffect(() => {
+    void refreshSession();
+  }, [refreshSession]);
+
+  const login = useCallback(async (payload: LoginPayload) => {
+    setIsLoading(true);
+    try {
+      const newSession = await loginUser(payload);
+      setSession(newSession);
+    } finally {
+      setIsLoading(false);
     }
-    return null;
-  });
+  }, []);
 
-  const [isLoading] = useState(false); // no longer needed
+  const signup = useCallback(async (payload: SignupPayload) => {
+    setIsLoading(true);
+    try {
+      const newSession = await signupUser(payload);
+      setSession(newSession);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
-  const login = (newToken: string, userData: User) => {
-    localStorage.setItem("accessToken", newToken);
-    localStorage.setItem("user", JSON.stringify(userData));
-    setToken(newToken);
-    setUser(userData);
-    router.push("/");
-  };
+  const logout = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      await logoutUser();
+      setSession(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
 
-  const logout = () => {
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("user");
-    setToken(null);
-    setUser(null);
-    router.push("/login");
-  };
-
-  return (
-    <AuthContext.Provider value={{ user, token, login, logout, isLoading }}>
-      {children}
-    </AuthContext.Provider>
+  const value = useMemo<AuthContextValue>(
+    () => ({
+      user: session?.user ?? null,
+      session,
+      isAuthenticated: Boolean(session?.accessToken),
+      isLoading,
+      login,
+      signup,
+      logout,
+      refreshSession,
+    }),
+    [session, isLoading, login, signup, logout, refreshSession]
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-export const useAuth = () => {
+export function useAuth(): AuthContextValue {
   const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth must be used within an AuthProvider");
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider.");
+  }
   return context;
-};
+}

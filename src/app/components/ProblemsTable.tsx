@@ -1,5 +1,6 @@
 "use client";
 
+import { CheckCircle2, Circle, Dot } from "lucide-react";
 import { Problem } from "@/types";
 
 interface ProblemsTableProps {
@@ -7,150 +8,87 @@ interface ProblemsTableProps {
   onProblemClick?: (problemId: string) => void;
 }
 
+function difficultyClass(difficulty: Problem["difficulty"]): string {
+  if (difficulty === "Easy") {
+    return "text-emerald-600 dark:text-emerald-300";
+  }
+  if (difficulty === "Medium") {
+    return "text-amber-600 dark:text-amber-300";
+  }
+  return "text-rose-600 dark:text-rose-300";
+}
+
+function statusIcon(status: Problem["status"]) {
+  if (status === "solved") {
+    return <CheckCircle2 className="h-4 w-4 text-emerald-500" />;
+  }
+  if (status === "attempted") {
+    return <Dot className="h-5 w-5 text-amber-500" />;
+  }
+  return <Circle className="h-4 w-4 text-zinc-400" />;
+}
+
 export default function ProblemsTable({
   problems,
   onProblemClick,
 }: ProblemsTableProps) {
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case "Easy":
-        return "bg-green-50 text-green-700 border border-green-200";
-      case "Medium":
-        return "bg-yellow-50 text-yellow-700 border border-yellow-200";
-      case "Hard":
-        return "bg-red-50 text-red-700 border border-red-200";
-      default:
-        return "bg-gray-50 text-gray-700 border border-gray-200";
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "solved":
-        return (
-          <div className="w-5 h-5 rounded-full bg-green-500 flex items-center justify-center">
-            <svg
-              className="w-3 h-3 text-white"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={3}
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-          </div>
-        );
-      case "attempted":
-        return (
-          <div className="w-5 h-5 rounded-full border-2 border-orange-500"></div>
-        );
-      default:
-        return (
-          <div className="w-5 h-5 rounded-full border-2 border-gray-300"></div>
-        );
-    }
-  };
-
-  const handleProblemClick = (problemId: string) => {
-    if (onProblemClick) {
-      onProblemClick(problemId);
-    }
-  };
+  if (problems.length === 0) {
+    return (
+      <div className="rounded-xl border border-zinc-200 bg-white/90 p-10 text-center text-sm text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/80 dark:text-zinc-400">
+        No problems match your current filters.
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+    <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white/90 dark:border-zinc-800 dark:bg-zinc-900/80">
       <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-gray-50 border-b border-gray-200">
-            <tr>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-20">
-                Status
-              </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                Problem
-              </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-32">
-                Difficulty
-              </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-48">
-                Category
-              </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-32">
-                Acceptance
-              </th>
-              <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider w-32">
-                Action
-              </th>
+        <table className="w-full min-w-[760px]">
+          <thead className="border-b border-zinc-200 bg-zinc-100/80 dark:border-zinc-800 dark:bg-zinc-900">
+            <tr className="text-left text-xs uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
+              <th className="px-4 py-3">Status</th>
+              <th className="px-4 py-3">Title</th>
+              <th className="px-4 py-3">Tags</th>
+              <th className="px-4 py-3">Difficulty</th>
+              <th className="px-4 py-3">Acceptance</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
-            {problems.map((problem, index) => (
+          <tbody>
+            {problems.map((problem) => (
               <tr
                 key={problem.id}
-                className={`hover:bg-gray-100 transition-colors cursor-pointer ${
-                  index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                }`}
-                onClick={() => handleProblemClick(problem.id)}
+                onClick={() => onProblemClick?.(problem.id)}
+                className="cursor-pointer border-b border-zinc-200 text-sm transition hover:bg-zinc-100/70 dark:border-zinc-800 dark:hover:bg-zinc-800/70"
               >
-                <td className="px-6 py-4">{getStatusIcon(problem.status)}</td>
-                <td className="px-6 py-4">
-                  <div>
-                    <div className="font-medium text-gray-900 hover:text-blue-600 mb-1">
-                      {problem.title}
-                    </div>
-                    <div className="flex gap-2 flex-wrap">
-                      {problem.tags.map((tag, index) => (
-                        <span
-                          key={index}
-                          className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
+                <td className="px-4 py-3">{statusIcon(problem.status)}</td>
+                <td className="px-4 py-3">
+                  <p className="font-medium text-zinc-900 dark:text-zinc-100">
+                    {problem.title}
+                  </p>
+                </td>
+                <td className="px-4 py-3">
+                  <div className="flex flex-wrap gap-1.5">
+                    {problem.tags.map((tag) => (
+                      <span
+                        key={`${problem.id}-${tag}`}
+                        className="rounded-md bg-zinc-200/80 px-2 py-0.5 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
+                      >
+                        {tag}
+                      </span>
+                    ))}
                   </div>
                 </td>
-                <td className="px-6 py-4">
-                  <span
-                    className={`inline-flex px-3 py-1 text-xs font-medium rounded ${getDifficultyColor(
-                      problem.difficulty
-                    )}`}
-                  >
-                    {problem.difficulty}
-                  </span>
+                <td className={`px-4 py-3 font-medium ${difficultyClass(problem.difficulty)}`}>
+                  {problem.difficulty}
                 </td>
-                <td className="px-6 py-4 text-sm text-gray-700">
-                  {problem.category}
-                </td>
-                <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                  {problem.acceptance}%
-                </td>
-                <td className="px-6 py-4">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleProblemClick(problem.id);
-                    }}
-                    className="text-sm font-medium text-gray-900 hover:text-blue-600"
-                  >
-                    Solve
-                  </button>
+                <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
+                  {problem.acceptanceRate}%
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-
-      {problems.length === 0 && (
-        <div className="text-center py-12 text-gray-500">
-          No problems found. Try adjusting your filters.
-        </div>
-      )}
     </div>
   );
 }
