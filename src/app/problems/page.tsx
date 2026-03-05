@@ -26,7 +26,34 @@ const LEFT_ITEMS = [
   { label: "Study Plan", icon: Flame },
 ];
 
-const LIST_ITEMS = ["Favorites", "Top 150", "Interview Prep"];
+const LIST_ITEMS = ["Favorites", "Top Interview 150", "SQL 50"];
+const TOPIC_FILTERS = [
+  { key: "all", label: "All Topics" },
+  { key: "algorithms", label: "Algorithms" },
+  { key: "database", label: "Database" },
+  { key: "shell", label: "Shell" },
+] as const;
+const DATABASE_HINTS = ["database", "sql", "pandas", "joins", "groupby", "preprocessing"];
+const SHELL_HINTS = ["shell", "bash", "terminal", "script"];
+
+type TopicFilterKey = (typeof TOPIC_FILTERS)[number]["key"];
+
+function getTopicBucket(problem: Problem): Exclude<TopicFilterKey, "all"> {
+  const tags = problem.tags.map((tag) => tag.toLowerCase());
+  const isDatabase = tags.some((tag) =>
+    DATABASE_HINTS.some((needle) => tag.includes(needle))
+  );
+  if (isDatabase) {
+    return "database";
+  }
+
+  const isShell = tags.some((tag) => SHELL_HINTS.some((needle) => tag.includes(needle)));
+  if (isShell) {
+    return "shell";
+  }
+
+  return "algorithms";
+}
 
 function statusIcon(status: Problem["status"]) {
   if (status === "solved") {
@@ -54,6 +81,8 @@ export default function ProblemsPage() {
   const [problems, setProblems] = useState<Problem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [topicFilter, setTopicFilter] = useState<TopicFilterKey>("all");
+  const [starredProblems, setStarredProblems] = useState<Set<string>>(new Set());
   const searchInputRef = useRef<HTMLInputElement | null>(null);
   const [filters, setFilters] = useState<FilterState>({
     level: "All Levels",
@@ -76,13 +105,12 @@ export default function ProblemsPage() {
 
   useEffect(() => {
     const categoryParam = searchParams.get("category");
-    if (!categoryParam) {
-      return;
-    }
+    const queryParam = searchParams.get("query") || "";
     setFilters((current) => ({
       ...current,
-      category: categoryParam,
+      category: categoryParam || "All Categories",
     }));
+    setSearchQuery(queryParam);
   }, [searchParams]);
 
   useEffect(() => {
@@ -121,9 +149,21 @@ export default function ProblemsPage() {
       .slice(0, 10);
   }, [problems]);
 
+  const topicCounts = useMemo(() => {
+    return TOPIC_FILTERS.reduce<Record<TopicFilterKey, number>>(
+      (acc, filter) => {
+        acc[filter.key] =
+          filter.key === "all"
+            ? problems.length
+            : problems.filter((problem) => getTopicBucket(problem) === filter.key).length;
+        return acc;
+      },
+      { all: 0, algorithms: 0, database: 0, shell: 0 }
+    );
+  }, [problems]);
+
   const filteredProblems = useMemo(() => {
     let list = [...problems];
-
     if (filters.level !== "All Levels") {
       list = list.filter((problem) => problem.difficulty === filters.level);
     }
@@ -146,18 +186,22 @@ export default function ProblemsPage() {
       );
     }
 
+    if (topicFilter !== "all") {
+      list = list.filter((problem) => getTopicBucket(problem) === topicFilter);
+    }
+
     return list;
-  }, [problems, filters, searchQuery]);
+  }, [problems, filters, searchQuery, topicFilter]);
 
   const solvedCount = problems.filter((problem) => problem.status === "solved").length;
 
   return (
     <MainLayout
       title="Problemset"
-      subtitle="Train on curated ML, data science, and interview coding questions."
+      subtitle="Practice curated ML and data interview problems with contest-grade workflows"
     >
-      <section className="grid grid-cols-1 gap-4 xl:grid-cols-[220px_1fr_300px]">
-        <aside className="hidden rounded-2xl border border-zinc-800 bg-[#161a22] p-3 xl:block">
+      <section className="grid grid-cols-1 gap-4 xl:grid-cols-[220px_1fr_290px]">
+        <aside className="hidden h-fit rounded-2xl border border-zinc-800 bg-[#161a22] p-3 xl:sticky xl:top-24 xl:block">
           <div className="space-y-1">
             {LEFT_ITEMS.map((item) => {
               const Icon = item.icon;
@@ -200,20 +244,20 @@ export default function ProblemsPage() {
 
         <div className="space-y-4">
           <section className="grid grid-cols-1 gap-3 lg:grid-cols-3">
-            <article className="rounded-2xl border border-cyan-500/20 bg-gradient-to-r from-cyan-400/35 via-sky-500/25 to-indigo-400/20 p-4">
-              <p className="text-xs uppercase tracking-[0.16em] text-cyan-100">Offer Track</p>
-              <h2 className="mt-1 text-2xl font-semibold text-white">ML Offer Campaign</h2>
-              <p className="mt-1 text-sm text-cyan-50/90">60-day guided sprint.</p>
+            <article className="rounded-2xl border border-cyan-500/20 bg-gradient-to-br from-cyan-300/45 via-sky-500/35 to-indigo-500/35 p-4">
+              <p className="text-xs uppercase tracking-[0.16em] text-cyan-100">Offer Campaign</p>
+              <h2 className="mt-1 text-xl font-semibold text-white">2026 Spring Sprint</h2>
+              <p className="mt-1 text-sm text-cyan-50/90">Daily curated set for interview momentum.</p>
             </article>
-            <article className="rounded-2xl border border-amber-500/20 bg-gradient-to-r from-amber-400/35 via-orange-500/30 to-amber-700/20 p-4">
-              <p className="text-xs uppercase tracking-[0.16em] text-amber-100">Daily Focus</p>
-              <h2 className="mt-1 text-2xl font-semibold text-white">JavaScript Day 30</h2>
-              <p className="mt-1 text-sm text-amber-50/90">Short challenge for momentum.</p>
+            <article className="rounded-2xl border border-amber-500/20 bg-gradient-to-br from-amber-300/45 via-orange-500/35 to-amber-700/35 p-4">
+              <p className="text-xs uppercase tracking-[0.16em] text-amber-100">Today</p>
+              <h2 className="mt-1 text-xl font-semibold text-white">JavaScript Day 30</h2>
+              <p className="mt-1 text-sm text-amber-50/90">One challenge · 18 min estimate.</p>
             </article>
-            <article className="rounded-2xl border border-blue-500/20 bg-gradient-to-r from-blue-500/35 via-indigo-500/30 to-cyan-500/20 p-4">
-              <p className="text-xs uppercase tracking-[0.16em] text-blue-100">Interview Prep</p>
-              <h2 className="mt-1 text-2xl font-semibold text-white">Top Questions</h2>
-              <p className="mt-1 text-sm text-blue-50/90">Frequently asked rounds.</p>
+            <article className="rounded-2xl border border-blue-500/20 bg-gradient-to-br from-blue-500/45 via-indigo-500/35 to-cyan-500/35 p-4">
+              <p className="text-xs uppercase tracking-[0.16em] text-blue-100">Interview Bank</p>
+              <h2 className="mt-1 text-xl font-semibold text-white">Top Questions</h2>
+              <p className="mt-1 text-sm text-blue-50/90">Most asked in current hiring loops.</p>
             </article>
           </section>
 
@@ -221,12 +265,7 @@ export default function ProblemsPage() {
             {categories.map(([category, count]) => (
               <button
                 key={category}
-                onClick={() =>
-                  setFilters((current) => ({
-                    ...current,
-                    category,
-                  }))
-                }
+                onClick={() => setFilters((current) => ({ ...current, category }))}
                 className={`rounded-full px-3 py-1 transition ${
                   filters.category === category
                     ? "bg-zinc-100 text-zinc-900"
@@ -240,30 +279,20 @@ export default function ProblemsPage() {
 
           <section className="space-y-3 rounded-2xl border border-zinc-800 bg-[#161a22] p-3">
             <div className="flex flex-wrap items-center gap-2">
-              <button
-                onClick={() =>
-                  setFilters((current) => ({
-                    ...current,
-                    statusFilter: "all",
-                  }))
-                }
-                className={`rounded-full px-4 py-1.5 text-sm ${
-                  filters.statusFilter === "all"
-                    ? "bg-zinc-100 text-zinc-900"
-                    : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
-                }`}
-              >
-                All Topics
-              </button>
-              <button className="rounded-full bg-zinc-800 px-4 py-1.5 text-sm text-zinc-300 hover:bg-zinc-700">
-                Algorithms
-              </button>
-              <button className="rounded-full bg-zinc-800 px-4 py-1.5 text-sm text-zinc-300 hover:bg-zinc-700">
-                Database
-              </button>
-              <button className="rounded-full bg-zinc-800 px-4 py-1.5 text-sm text-zinc-300 hover:bg-zinc-700">
-                Shell
-              </button>
+              {TOPIC_FILTERS.map((filter) => (
+                <button
+                  key={filter.key}
+                  onClick={() => setTopicFilter(filter.key)}
+                  className={`rounded-full px-4 py-1.5 text-sm ${
+                    topicFilter === filter.key
+                      ? "bg-zinc-100 text-zinc-900"
+                      : "bg-zinc-800 text-zinc-300 hover:bg-zinc-700"
+                  }`}
+                >
+                  {filter.label}
+                  <span className="ml-1 text-xs opacity-70">{topicCounts[filter.key]}</span>
+                </button>
+              ))}
             </div>
 
             <div className="grid grid-cols-1 gap-2 md:grid-cols-[1fr_auto_auto_auto_auto]">
@@ -312,14 +341,19 @@ export default function ProblemsPage() {
             </div>
 
             <div className="flex items-center justify-between text-sm text-zinc-500">
-              <span>{solvedCount}/{problems.length} solved</span>
-              <span>Shortcut: press / to focus search</span>
+              <span>
+                {solvedCount}/{problems.length} solved
+              </span>
+              <span>
+                {filteredProblems.length} shown · Press / to focus search
+              </span>
             </div>
 
             <div className="overflow-hidden rounded-xl border border-zinc-800">
-              <table className="w-full min-w-[760px] border-collapse">
+              <table className="w-full min-w-[780px] border-collapse">
                 <thead className="bg-zinc-900 text-left text-xs uppercase tracking-[0.14em] text-zinc-500">
                   <tr>
+                    <th className="px-4 py-3">#</th>
                     <th className="px-4 py-3">Status</th>
                     <th className="px-4 py-3">Title</th>
                     <th className="px-4 py-3">Acceptance</th>
@@ -330,23 +364,24 @@ export default function ProblemsPage() {
                 <tbody>
                   {isLoading ? (
                     <tr>
-                      <td colSpan={5} className="px-4 py-8 text-center text-sm text-zinc-400">
+                      <td colSpan={6} className="px-4 py-8 text-center text-sm text-zinc-400">
                         Loading problemset...
                       </td>
                     </tr>
                   ) : filteredProblems.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-4 py-8 text-center text-sm text-zinc-400">
+                      <td colSpan={6} className="px-4 py-8 text-center text-sm text-zinc-400">
                         No problems matched your filters.
                       </td>
                     </tr>
                   ) : (
-                    filteredProblems.map((problem) => (
+                    filteredProblems.map((problem, index) => (
                       <tr
                         key={problem.id}
                         onClick={() => problem.slug && router.push(`/problems/${problem.slug}`)}
                         className="cursor-pointer border-t border-zinc-800/80 bg-zinc-950/70 text-sm text-zinc-200 transition hover:bg-zinc-900"
                       >
+                        <td className="px-4 py-3 text-zinc-500">{index + 1}</td>
                         <td className="px-4 py-3">{statusIcon(problem.status)}</td>
                         <td className="px-4 py-3 font-medium">{problem.title}</td>
                         <td className="px-4 py-3 text-zinc-400">{problem.acceptanceRate}%</td>
@@ -354,7 +389,30 @@ export default function ProblemsPage() {
                           {problem.difficulty}
                         </td>
                         <td className="px-4 py-3">
-                          <Star className="h-4 w-4 text-zinc-500" />
+                          <button
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              setStarredProblems((previous) => {
+                                const next = new Set(previous);
+                                if (next.has(problem.id)) {
+                                  next.delete(problem.id);
+                                } else {
+                                  next.add(problem.id);
+                                }
+                                return next;
+                              });
+                            }}
+                            className="rounded p-1 text-zinc-500 hover:bg-zinc-800 hover:text-amber-300"
+                            aria-label={`Toggle favorite for ${problem.title}`}
+                          >
+                            <Star
+                              className={`h-4 w-4 ${
+                                starredProblems.has(problem.id)
+                                  ? "fill-amber-300 text-amber-300"
+                                  : ""
+                              }`}
+                            />
+                          </button>
                         </td>
                       </tr>
                     ))
@@ -365,12 +423,12 @@ export default function ProblemsPage() {
           </section>
         </div>
 
-        <aside className="hidden space-y-4 xl:block">
+        <aside className="hidden h-fit space-y-4 xl:sticky xl:top-24 xl:block">
           <article className="rounded-2xl border border-zinc-800 bg-[#161a22] p-4">
             <p className="text-xs uppercase tracking-[0.18em] text-zinc-500">Today</p>
-            <h3 className="mt-2 text-lg font-semibold text-zinc-200">Daily Premium</h3>
+            <h3 className="mt-2 text-lg font-semibold text-zinc-200">Weekly Premium</h3>
             <p className="mt-2 text-sm text-zinc-400">
-              Complete one contest-style challenge and keep your streak.
+              Solve one premium question and keep your 7-day streak active.
             </p>
             <button className="mt-4 rounded-lg bg-amber-500/20 px-3 py-2 text-sm font-medium text-amber-300">
               Redeem

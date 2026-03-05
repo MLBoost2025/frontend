@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import MainLayout from "../components/MainLayout";
 import { AlarmClockCheck, Shuffle, Trophy } from "lucide-react";
 
@@ -7,20 +8,65 @@ const UPCOMING = [
   {
     id: "weekly",
     title: "Weekly Contest 492",
-    startsAt: "Sun, Mar 8, 08:00 GMT+05:30",
-    countdown: "2d 08:44:53",
+    startsAt: "2026-03-08T08:00:00+05:30",
     gradient: "from-amber-300/90 via-orange-400/90 to-amber-700/70",
   },
   {
     id: "biweekly",
     title: "Biweekly Contest 178",
-    startsAt: "Sat, Mar 14, 20:00 GMT+05:30",
-    countdown: "8d 20:44:53",
+    startsAt: "2026-03-14T20:00:00+05:30",
     gradient: "from-indigo-500/90 via-violet-500/90 to-indigo-900/70",
   },
 ];
 
+function formatCountdown(targetMs: number, nowMs: number): string {
+  const remaining = targetMs - nowMs;
+  if (remaining <= 0) {
+    return "Live now";
+  }
+
+  const totalSeconds = Math.floor(remaining / 1000);
+  const days = Math.floor(totalSeconds / (24 * 60 * 60));
+  const hours = Math.floor((totalSeconds % (24 * 60 * 60)) / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  const padded = `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+    2,
+    "0"
+  )}:${String(seconds).padStart(2, "0")}`;
+  return `${days}d ${padded}`;
+}
+
 export default function CompetitionsPage() {
+  const [nowMs, setNowMs] = useState(() => Date.now());
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNowMs(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const contestCards = useMemo(
+    () =>
+      UPCOMING.map((contest) => {
+        const startsAtMs = new Date(contest.startsAt).getTime();
+        return {
+          ...contest,
+          startsAtLabel: new Date(contest.startsAt).toLocaleString(undefined, {
+            weekday: "short",
+            month: "short",
+            day: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            timeZoneName: "short",
+          }),
+          countdownLabel: formatCountdown(startsAtMs, nowMs),
+          isLive: startsAtMs <= nowMs,
+        };
+      }),
+    [nowMs]
+  );
+
   return (
     <MainLayout title="Contest" subtitle="Contest every week. Compete and climb the rankings.">
       <section className="relative overflow-hidden rounded-3xl border border-zinc-800 bg-[#11141b] p-6 md:p-10">
@@ -41,7 +87,7 @@ export default function CompetitionsPage() {
         </div>
 
         <div className="relative z-10 mt-10 grid grid-cols-1 gap-4 xl:grid-cols-2">
-          {UPCOMING.map((contest) => (
+          {contestCards.map((contest) => (
             <article
               key={contest.id}
               className={`overflow-hidden rounded-3xl border border-zinc-700/60 bg-gradient-to-br ${contest.gradient}`}
@@ -49,13 +95,15 @@ export default function CompetitionsPage() {
               <div className="flex items-center justify-between bg-black/20 px-5 py-3 text-sm text-white/90">
                 <p className="inline-flex items-center gap-1.5">
                   <AlarmClockCheck className="h-4 w-4" />
-                  {contest.countdown}
+                  {contest.countdownLabel}
                 </p>
-                <button className="rounded-full bg-white/25 px-3 py-1 text-xs">Notify me</button>
+                <button className="rounded-full bg-white/25 px-3 py-1 text-xs">
+                  {contest.isLive ? "Join Live" : "Notify me"}
+                </button>
               </div>
               <div className="p-6">
                 <h2 className="text-4xl font-semibold text-white">{contest.title}</h2>
-                <p className="mt-2 text-base text-white/90">{contest.startsAt}</p>
+                <p className="mt-2 text-base text-white/90">{contest.startsAtLabel}</p>
               </div>
             </article>
           ))}
