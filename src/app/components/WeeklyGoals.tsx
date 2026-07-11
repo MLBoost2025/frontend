@@ -8,18 +8,19 @@ interface Goal {
 
 interface WeeklyGoalsProps {
   goals: Goal[];
+  title?: string;
 }
 
-export default function WeeklyGoals({ goals }: WeeklyGoalsProps) {
+export default function WeeklyGoals({ goals, title = "Weekly Goals" }: WeeklyGoalsProps) {
   return (
     <section className="rounded-xl border border-zinc-200 bg-white/90 p-5 backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/80">
       <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
-        Weekly Goals
+        {title}
       </h2>
 
       <div className="space-y-4">
         {goals.map((goal) => {
-          const pct = Math.min(100, (goal.current / goal.target) * 100);
+          const pct = goal.target > 0 ? Math.min(100, (goal.current / goal.target) * 100) : 0;
 
           return (
             <article key={goal.title}>
