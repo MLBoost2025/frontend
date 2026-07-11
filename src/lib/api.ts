@@ -12,6 +12,7 @@ import {
   SubmissionTestCaseResult,
   TopicProgressPoint,
   UserProfile,
+  UserStats,
 } from "@/types";
 import { AUTH_COOKIE_NAME, AUTH_COOKIE_TTL_SECONDS } from "@/lib/auth";
 import { trackEvent } from "@/lib/analytics";
@@ -1490,6 +1491,72 @@ export async function fetchUserProfile(): Promise<UserProfile> {
     "fetch_user_profile",
     () => liveFetchUserProfile(),
     () => mockFetchUserProfile()
+  );
+}
+
+const EMPTY_DIFFICULTY = { Easy: { solved: 0, total: 0 }, Medium: { solved: 0, total: 0 }, Hard: { solved: 0, total: 0 } };
+
+// Derive stats from the local mock problems + submission history so the mock
+// dashboard reflects problems actually solved in this browser.
+async function mockFetchUserStats(): Promise<UserStats> {
+  await wait(120);
+  const history = readSubmissionHistoryStore();
+
+  const solved = new Set<string>();
+  const attempted = new Set<string>();
+  let acceptedSubmissions = 0;
+  for (const entry of history) {
+    if (entry.mode === "submit" && entry.result.status === "Accepted") {
+      solved.add(entry.problemSlug);
+      acceptedSubmissions += 1;
+    } else {
+      attempted.add(entry.problemSlug);
+    }
+  }
+  for (const slug of solved) attempted.delete(slug);
+
+  const byDifficulty = {
+    Easy: { solved: 0, total: 0 },
+    Medium: { solved: 0, total: 0 },
+    Hard: { solved: 0, total: 0 },
+  };
+  for (const problem of MOCK_PROBLEMS) {
+    const bucket = byDifficulty[problem.difficulty];
+    if (bucket) {
+      bucket.total += 1;
+      if (solved.has(problem.slug)) bucket.solved += 1;
+    }
+  }
+
+  return {
+    totalProblems: MOCK_PROBLEMS.length,
+    solved: solved.size,
+    attempted: attempted.size,
+    totalSubmissions: history.length,
+    acceptedSubmissions,
+    byDifficulty,
+  };
+}
+
+async function liveFetchUserStats(): Promise<UserStats> {
+  const data = await fetchWithRetry<Partial<UserStats>>("/users/me/stats", {
+    method: "GET",
+  });
+  return {
+    totalProblems: data.totalProblems ?? 0,
+    solved: data.solved ?? 0,
+    attempted: data.attempted ?? 0,
+    totalSubmissions: data.totalSubmissions ?? 0,
+    acceptedSubmissions: data.acceptedSubmissions ?? 0,
+    byDifficulty: data.byDifficulty ?? EMPTY_DIFFICULTY,
+  };
+}
+
+export async function fetchUserStats(): Promise<UserStats> {
+  return runWithBackendSwitch(
+    "fetch_user_stats",
+    () => liveFetchUserStats(),
+    () => mockFetchUserStats()
   );
 }
 

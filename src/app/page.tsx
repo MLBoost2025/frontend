@@ -1,31 +1,27 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import MainLayout from "./components/MainLayout";
 import StatsCard from "./components/StatsCard";
 import RecentActivity from "./components/RecentActivity";
 import WeeklyGoals from "./components/WeeklyGoals";
-
-const STATS = {
-  problemsSolved: 47,
-  currentStreak: 12,
-  ranking: "#1,247",
-  achievements: 8,
-};
+import { fetchUserStats } from "@/lib/api";
+import { UserStats } from "@/types";
 
 const RECENT_ACTIVITIES = [
   {
     id: "1",
     title: "Image Classification with CNN",
     difficulty: "Medium" as const,
-    status: "Completed" as const,
-    progress: 100,
+    status: "In Progress" as const,
+    progress: 60,
   },
   {
     id: "2",
     title: "Sentiment Analysis Model",
     difficulty: "Easy" as const,
-    status: "In Progress" as const,
-    progress: 60,
+    status: "Completed" as const,
+    progress: 100,
   },
   {
     id: "3",
@@ -36,13 +32,43 @@ const RECENT_ACTIVITIES = [
   },
 ];
 
-const WEEKLY_GOALS = [
-  { title: "Problems Solved", current: 7, target: 10 },
-  { title: "Learning Hours", current: 8, target: 12 },
-  { title: "Code Reviews", current: 3, target: 5 },
-];
+function acceptanceRate(stats: UserStats): string {
+  if (stats.totalSubmissions === 0) return "—";
+  return `${Math.round((stats.acceptedSubmissions / stats.totalSubmissions) * 100)}%`;
+}
 
 export default function Home() {
+  const [stats, setStats] = useState<UserStats | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const data = await fetchUserStats();
+        if (active) setStats(data);
+      } catch {
+        if (active) setError("Could not load your stats.");
+      } finally {
+        if (active) setIsLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const difficultyGoals = stats
+    ? (["Easy", "Medium", "Hard"] as const).map((level) => ({
+        title: level,
+        current: stats.byDifficulty[level].solved,
+        target: stats.byDifficulty[level].total,
+      }))
+    : [];
+
   return (
     <MainLayout
       title="Dashboard"
@@ -61,11 +87,23 @@ export default function Home() {
         </p>
       </section>
 
+      {error ? (
+        <p className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-700 dark:text-rose-300">
+          {error}
+        </p>
+      ) : null}
+
       <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatsCard title="Problems Solved" value={STATS.problemsSolved} />
-        <StatsCard title="Current Streak" value={`${STATS.currentStreak} days`} />
-        <StatsCard title="Ranking" value={STATS.ranking} />
-        <StatsCard title="Achievements" value={STATS.achievements} />
+        <StatsCard title="Problems Solved" value={isLoading || !stats ? "—" : stats.solved} />
+        <StatsCard title="Attempted" value={isLoading || !stats ? "—" : stats.attempted} />
+        <StatsCard
+          title="Submissions"
+          value={isLoading || !stats ? "—" : stats.totalSubmissions}
+        />
+        <StatsCard
+          title="Acceptance"
+          value={isLoading || !stats ? "—" : acceptanceRate(stats)}
+        />
       </section>
 
       <section className="grid grid-cols-1 gap-4 xl:grid-cols-4">
@@ -73,7 +111,7 @@ export default function Home() {
           <RecentActivity activities={RECENT_ACTIVITIES} />
         </div>
         <div className="xl:col-span-1">
-          <WeeklyGoals goals={WEEKLY_GOALS} />
+          <WeeklyGoals title="Difficulty Progress" goals={difficultyGoals} />
         </div>
       </section>
     </MainLayout>

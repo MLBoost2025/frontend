@@ -172,3 +172,21 @@ export interface FilterState {
   category: string;
   statusFilter: "all" | "todo" | "solved";
 }
+
+export interface DifficultyStat {
+  solved: number;
+  total: number;
+}
+
+export interface UserStats {
+  totalProblems: number;
+  solved: number;
+  attempted: number;
+  totalSubmissions: number;
+  acceptedSubmissions: number;
+  byDifficulty: {
+    Easy: DifficultyStat;
+    Medium: DifficultyStat;
+    Hard: DifficultyStat;
+  };
+}
