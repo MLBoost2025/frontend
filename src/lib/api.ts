@@ -513,6 +513,13 @@ function clearStoredSession(): void {
   window.document.cookie = `${AUTH_COOKIE_NAME}=; path=/; max-age=0; samesite=lax`;
 }
 
+function getStoredAccessToken(): string | null {
+  if (!isBrowser()) {
+    return null;
+  }
+  return window.localStorage.getItem(ACCESS_TOKEN_KEY);
+}
+
 function createMockSession(name: string, email: string): AuthSession {
   const now = new Date();
   const token = `mock_${Math.random().toString(36).slice(2)}_${Date.now()}`;
@@ -836,10 +843,22 @@ async function fetchWithRetry<T>(
   init?: RequestInit,
   retries = API_RETRY_COUNT
 ): Promise<T> {
+  const method = (init?.method || "GET").toUpperCase();
+  // Only retry idempotent methods. Retrying POST (e.g. /submissions) on a
+  // timeout can duplicate a submission that actually succeeded server-side.
+  const isIdempotent = method === "GET" || method === "HEAD";
+  const maxRetries = isIdempotent ? retries : 0;
+
+  // Attach the bearer token so live API calls are authenticated.
+  const token = getStoredAccessToken();
+  const authHeaders: Record<string, string> = token
+    ? { Authorization: `Bearer ${token}` }
+    : {};
+
   let attempt = 0;
   let lastError: unknown;
 
-  while (attempt <= retries) {
+  while (attempt <= maxRetries) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
 
@@ -847,8 +866,10 @@ async function fetchWithRetry<T>(
       const response = await fetch(`${API_BASE_URL}${path}`, {
         ...init,
         signal: controller.signal,
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
+          ...authHeaders,
           ...(init?.headers || {}),
         },
       });
@@ -857,7 +878,12 @@ async function fetchWithRetry<T>(
 
       if (!response.ok) {
         const message = await response.text();
-        throw new Error(`HTTP ${response.status}: ${message || "Request failed"}`);
+        const error: Error & { retryable?: boolean } = new Error(
+          `HTTP ${response.status}: ${message || "Request failed"}`
+        );
+        // Client errors (4xx) are deterministic — retrying can't help. Only 5xx is retryable.
+        error.retryable = response.status >= 500;
+        throw error;
       }
 
       const text = await response.text();
@@ -866,9 +892,13 @@ async function fetchWithRetry<T>(
       clearTimeout(timeoutId);
       lastError = error;
       attempt += 1;
-      if (attempt <= retries) {
+      // Network/abort errors carry no `retryable` flag → treated as retryable.
+      const retryable = (error as { retryable?: boolean })?.retryable !== false;
+      if (retryable && attempt <= maxRetries) {
         await wait(250 * attempt);
+        continue;
       }
+      break;
     }
   }
 
