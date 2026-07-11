@@ -2,15 +2,8 @@
 
 import { useEffect, useState } from "react";
 import MainLayout from "../components/MainLayout";
-import { fetchCompetitions } from "@/lib/api";
-import { Competition } from "@/types";
-
-const LEADERBOARD = [
-  { rank: 1, name: "Aarav", score: 1980 },
-  { rank: 2, name: "Emily", score: 1945 },
-  { rank: 3, name: "Noah", score: 1910 },
-  { rank: 4, name: "Saanvi", score: 1890 },
-];
+import { fetchCompetitions, fetchLeaderboard } from "@/lib/api";
+import { Competition, LeaderboardEntry } from "@/types";
 
 function StatusBadge({ status }: { status: Competition["status"] }) {
   const styles =
@@ -53,6 +46,7 @@ function durationLabel(competition: Competition): string {
 
 export default function CompetitionsPage() {
   const [competitions, setCompetitions] = useState<Competition[]>([]);
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -62,8 +56,14 @@ export default function CompetitionsPage() {
       try {
         setIsLoading(true);
         setError(null);
-        const data = await fetchCompetitions();
-        if (active) setCompetitions(data);
+        const [contestData, boardData] = await Promise.all([
+          fetchCompetitions(),
+          fetchLeaderboard(5),
+        ]);
+        if (active) {
+          setCompetitions(contestData);
+          setLeaderboard(boardData);
+        }
       } catch {
         if (active) setError("Could not load competitions.");
       } finally {
@@ -147,21 +147,29 @@ export default function CompetitionsPage() {
 
         <div className="rounded-xl border border-zinc-200 bg-white/90 p-5 dark:border-zinc-800 dark:bg-zinc-900/80">
           <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
-            Leaderboard Snapshot
+            Leaderboard
           </h3>
-          <div className="space-y-2">
-            {LEADERBOARD.map((entry) => (
-              <div
-                key={entry.rank}
-                className="flex items-center justify-between rounded-md border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-800"
-              >
-                <span className="font-medium text-zinc-800 dark:text-zinc-100">
-                  #{entry.rank} {entry.name}
-                </span>
-                <span className="text-zinc-500 dark:text-zinc-400">{entry.score}</span>
-              </div>
-            ))}
-          </div>
+          {isLoading ? (
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">Loading…</p>
+          ) : leaderboard.length === 0 ? (
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">No ranked solvers yet.</p>
+          ) : (
+            <div className="space-y-2">
+              {leaderboard.map((entry) => (
+                <div
+                  key={entry.userId}
+                  className="flex items-center justify-between rounded-md border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-800"
+                >
+                  <span className="font-medium text-zinc-800 dark:text-zinc-100">
+                    #{entry.rank} {entry.username}
+                  </span>
+                  <span className="text-zinc-500 dark:text-zinc-400">
+                    {entry.solved} solved
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </MainLayout>
