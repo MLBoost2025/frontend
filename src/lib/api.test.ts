@@ -2,6 +2,7 @@ import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import {
   fetchCompetitions,
   fetchLeaderboard,
+  fetchLearningTracks,
   fetchRecentActivity,
   fetchSubmissionHistory,
   fetchUserProgress,
@@ -158,5 +159,15 @@ describe("mock api", () => {
     expect(progress.weekly).toHaveLength(7);
     expect(progress.currentStreak).toBeGreaterThanOrEqual(0);
     expect(Array.isArray(progress.topics)).toBe(true);
+  });
+
+  it("returns mock learning tracks with lesson counts", async () => {
+    const promise = fetchLearningTracks();
+    await vi.runAllTimersAsync();
+    const tracks = await promise;
+
+    expect(tracks.length).toBeGreaterThan(0);
+    expect(tracks[0].title).toBeTruthy();
+    expect(tracks[0].lessonCount).toBe(tracks[0].lessons.length);
   });
 });

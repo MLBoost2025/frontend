@@ -199,6 +199,16 @@ export interface LeaderboardEntry {
   solved: number;
 }
 
+export interface LearningTrack {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  tags: string[];
+  lessons: string[];
+  lessonCount: number;
+}
+
 export type CompetitionStatus = "upcoming" | "live" | "ended";
 
 export interface Competition {

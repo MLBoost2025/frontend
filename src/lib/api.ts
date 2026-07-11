@@ -7,6 +7,7 @@ import {
   Difficulty,
   ExecutionMode,
   LeaderboardEntry,
+  LearningTrack,
   LoginPayload,
   Problem,
   ProblemDetail,
@@ -1819,6 +1820,67 @@ export async function fetchLeaderboard(limit = 10): Promise<LeaderboardEntry[]> 
     "fetch_leaderboard",
     () => liveFetchLeaderboard(limit),
     () => mockFetchLeaderboard(limit)
+  );
+}
+
+const MOCK_LEARNING_TRACKS: LearningTrack[] = [
+  {
+    id: "track-ml-foundations",
+    slug: "ml-foundations",
+    title: "ML Foundations",
+    description: "Linear models, overfitting, feature scaling, and evaluation.",
+    tags: ["supervised-learning", "model-evaluation"],
+    lessons: [
+      "Bias-Variance Tradeoff",
+      "Confusion Matrix and F1",
+      "Regularization in Practice",
+      "Gradient Descent Intuition",
+    ],
+    lessonCount: 4,
+  },
+  {
+    id: "track-pandas-interviews",
+    slug: "pandas-for-interviews",
+    title: "Pandas for Interviews",
+    description: "Joins, groupby, window operations, and common data transforms.",
+    tags: ["data-preprocessing"],
+    lessons: ["GroupBy Deep Dive", "Joins and Merges", "Window Functions"],
+    lessonCount: 3,
+  },
+  {
+    id: "track-model-selection",
+    slug: "model-selection",
+    title: "Model Selection",
+    description: "Cross-validation, hyperparameter tuning, and proper split strategy.",
+    tags: ["model-evaluation"],
+    lessons: ["Cross-Validation", "Hyperparameter Tuning", "Feature Drift Detection"],
+    lessonCount: 3,
+  },
+];
+
+async function mockFetchLearningTracks(): Promise<LearningTrack[]> {
+  await wait(120);
+  return clone(MOCK_LEARNING_TRACKS);
+}
+
+async function liveFetchLearningTracks(): Promise<LearningTrack[]> {
+  const data = await fetchWithRetry<LearningTrack[]>("/learn/tracks", { method: "GET" });
+  return (Array.isArray(data) ? data : []).map((track) => ({
+    id: track.id,
+    slug: track.slug,
+    title: track.title,
+    description: track.description ?? "",
+    tags: track.tags ?? [],
+    lessons: track.lessons ?? [],
+    lessonCount: track.lessonCount ?? (track.lessons ?? []).length,
+  }));
+}
+
+export async function fetchLearningTracks(): Promise<LearningTrack[]> {
+  return runWithBackendSwitch(
+    "fetch_learning_tracks",
+    () => liveFetchLearningTracks(),
+    () => mockFetchLearningTracks()
   );
 }
 
