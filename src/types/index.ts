@@ -173,6 +173,14 @@ export interface FilterState {
   statusFilter: "all" | "todo" | "solved";
 }
 
+export interface RecentActivityItem {
+  id: string;
+  title: string;
+  difficulty: Difficulty;
+  status: "Completed" | "In Progress";
+  progress: number;
+}
+
 export interface DifficultyStat {
   solved: number;
   total: number;

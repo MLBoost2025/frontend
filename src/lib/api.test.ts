@@ -1,5 +1,6 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import {
+  fetchRecentActivity,
   fetchSubmissionHistory,
   fetchUserStats,
   getCurrentSession,
@@ -102,5 +103,26 @@ describe("mock api", () => {
     // The submission is counted, and the problem lands in solved or attempted.
     expect(stats.totalSubmissions).toBeGreaterThanOrEqual(1);
     expect(stats.solved + stats.attempted).toBeGreaterThanOrEqual(1);
+  });
+
+  it("returns recent activity from mock submissions", async () => {
+    const emptyPromise = fetchRecentActivity(5);
+    await vi.runAllTimersAsync();
+    expect(await emptyPromise).toEqual([]);
+
+    const submitPromise = submitSolution(
+      "p-004",
+      `def binary_f1(y_true, y_pred):\n    return 1`
+    );
+    await vi.runAllTimersAsync();
+    await submitPromise;
+
+    const activityPromise = fetchRecentActivity(5);
+    await vi.runAllTimersAsync();
+    const activity = await activityPromise;
+
+    expect(activity.length).toBeGreaterThanOrEqual(1);
+    expect(activity[0].title).toBeTruthy();
+    expect(["Easy", "Medium", "Hard"]).toContain(activity[0].difficulty);
   });
 });

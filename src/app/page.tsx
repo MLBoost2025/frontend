@@ -5,32 +5,8 @@ import MainLayout from "./components/MainLayout";
 import StatsCard from "./components/StatsCard";
 import RecentActivity from "./components/RecentActivity";
 import WeeklyGoals from "./components/WeeklyGoals";
-import { fetchUserStats } from "@/lib/api";
-import { UserStats } from "@/types";
-
-const RECENT_ACTIVITIES = [
-  {
-    id: "1",
-    title: "Image Classification with CNN",
-    difficulty: "Medium" as const,
-    status: "In Progress" as const,
-    progress: 60,
-  },
-  {
-    id: "2",
-    title: "Sentiment Analysis Model",
-    difficulty: "Easy" as const,
-    status: "Completed" as const,
-    progress: 100,
-  },
-  {
-    id: "3",
-    title: "Time Series Forecasting",
-    difficulty: "Hard" as const,
-    status: "In Progress" as const,
-    progress: 30,
-  },
-];
+import { fetchRecentActivity, fetchUserStats } from "@/lib/api";
+import { RecentActivityItem, UserStats } from "@/types";
 
 function acceptanceRate(stats: UserStats): string {
   if (stats.totalSubmissions === 0) return "—";
@@ -39,6 +15,7 @@ function acceptanceRate(stats: UserStats): string {
 
 export default function Home() {
   const [stats, setStats] = useState<UserStats | null>(null);
+  const [activities, setActivities] = useState<RecentActivityItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -48,10 +25,16 @@ export default function Home() {
       try {
         setIsLoading(true);
         setError(null);
-        const data = await fetchUserStats();
-        if (active) setStats(data);
+        const [statsData, activityData] = await Promise.all([
+          fetchUserStats(),
+          fetchRecentActivity(5),
+        ]);
+        if (active) {
+          setStats(statsData);
+          setActivities(activityData);
+        }
       } catch {
-        if (active) setError("Could not load your stats.");
+        if (active) setError("Could not load your dashboard.");
       } finally {
         if (active) setIsLoading(false);
       }
@@ -108,7 +91,7 @@ export default function Home() {
 
       <section className="grid grid-cols-1 gap-4 xl:grid-cols-4">
         <div className="xl:col-span-3">
-          <RecentActivity activities={RECENT_ACTIVITIES} />
+          <RecentActivity activities={activities} />
         </div>
         <div className="xl:col-span-1">
           <WeeklyGoals title="Difficulty Progress" goals={difficultyGoals} />

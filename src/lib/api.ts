@@ -2,6 +2,7 @@ import {
   AuthSession,
   CompanyTrack,
   ContestRank,
+  Difficulty,
   ExecutionMode,
   LoginPayload,
   Problem,
@@ -9,6 +10,7 @@ import {
   SignupPayload,
   SubmissionRecord,
   SubmissionResult,
+  RecentActivityItem,
   SubmissionTestCaseResult,
   TopicProgressPoint,
   UserProfile,
@@ -1401,7 +1403,7 @@ async function mockFetchSubmissionHistory(
 
 interface LiveSubmission {
   _id: string;
-  problemId?: { _id?: string; title?: string; slug?: string } | string;
+  problemId?: { _id?: string; title?: string; slug?: string; difficulty?: string } | string;
   code?: string;
   status?: string;
   runtime?: number;
@@ -1557,6 +1559,61 @@ export async function fetchUserStats(): Promise<UserStats> {
     "fetch_user_stats",
     () => liveFetchUserStats(),
     () => mockFetchUserStats()
+  );
+}
+
+function toDifficulty(value: unknown): Difficulty {
+  return value === "Easy" || value === "Medium" || value === "Hard" ? value : "Medium";
+}
+
+async function mockFetchRecentActivity(limit: number): Promise<RecentActivityItem[]> {
+  await wait(120);
+  return readSubmissionHistoryStore()
+    .slice()
+    .sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1))
+    .slice(0, limit)
+    .map((rec) => {
+      const problem =
+        getProblemByIdentifier(rec.problemSlug) || getProblemByIdentifier(rec.problemId);
+      const accepted = rec.result.status === "Accepted";
+      const progress = accepted
+        ? 100
+        : rec.result.totalCount > 0
+        ? Math.round((rec.result.passedCount / rec.result.totalCount) * 100)
+        : 40;
+      return {
+        id: rec.id,
+        title: rec.problemTitle,
+        difficulty: toDifficulty(problem?.difficulty),
+        status: accepted ? "Completed" : "In Progress",
+        progress,
+      };
+    });
+}
+
+async function liveFetchRecentActivity(limit: number): Promise<RecentActivityItem[]> {
+  const data = await fetchWithRetry<LiveSubmission[]>(`/submissions?limit=${limit}`, {
+    method: "GET",
+  });
+  return (Array.isArray(data) ? data : []).map((sub) => {
+    const populated =
+      sub.problemId && typeof sub.problemId === "object" ? sub.problemId : undefined;
+    const accepted = sub.status === "Accepted";
+    return {
+      id: sub._id,
+      title: populated?.title || "Problem",
+      difficulty: toDifficulty(populated?.difficulty),
+      status: accepted ? "Completed" : "In Progress",
+      progress: accepted ? 100 : 40,
+    };
+  });
+}
+
+export async function fetchRecentActivity(limit = 5): Promise<RecentActivityItem[]> {
+  return runWithBackendSwitch(
+    "fetch_recent_activity",
+    () => liveFetchRecentActivity(limit),
+    () => mockFetchRecentActivity(limit)
   );
 }
 

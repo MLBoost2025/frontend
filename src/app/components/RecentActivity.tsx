@@ -1,18 +1,12 @@
 "use client";
 
-interface ActivityItem {
-  id: string;
-  title: string;
-  difficulty: "Easy" | "Medium" | "Hard";
-  status: "Completed" | "In Progress";
-  progress: number;
-}
+import { RecentActivityItem } from "@/types";
 
 interface RecentActivityProps {
-  activities: ActivityItem[];
+  activities: RecentActivityItem[];
 }
 
-function difficultyClasses(difficulty: ActivityItem["difficulty"]): string {
+function difficultyClasses(difficulty: RecentActivityItem["difficulty"]): string {
   if (difficulty === "Easy") {
     return "text-emerald-600 dark:text-emerald-300";
   }
@@ -33,6 +27,12 @@ export default function RecentActivity({ activities }: RecentActivityProps) {
           View all
         </button>
       </div>
+
+      {activities.length === 0 ? (
+        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          No activity yet — solve a problem to get started.
+        </p>
+      ) : null}
 
       <div className="space-y-3">
         {activities.map((activity) => (
