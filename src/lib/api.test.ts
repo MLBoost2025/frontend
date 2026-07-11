@@ -1,5 +1,6 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import {
+  fetchCompetitions,
   fetchRecentActivity,
   fetchSubmissionHistory,
   fetchUserStats,
@@ -124,5 +125,18 @@ describe("mock api", () => {
     expect(activity.length).toBeGreaterThanOrEqual(1);
     expect(activity[0].title).toBeTruthy();
     expect(["Easy", "Medium", "Hard"]).toContain(activity[0].difficulty);
+  });
+
+  it("returns mock competitions with computed statuses", async () => {
+    const promise = fetchCompetitions();
+    await vi.runAllTimersAsync();
+    const competitions = await promise;
+
+    expect(competitions.length).toBeGreaterThan(0);
+    for (const c of competitions) {
+      expect(["upcoming", "live", "ended"]).toContain(c.status);
+    }
+    expect(competitions.some((c) => c.status === "live")).toBe(true);
+    expect(competitions.some((c) => c.status === "upcoming")).toBe(true);
   });
 });
