@@ -1,36 +1,86 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# MLBoost frontend
 
-## Getting Started
+The web app for **MLBoost** — an interactive platform for practicing machine
+learning and data science, think **LeetCode meets Kaggle** for ML students.
+Browse problems, solve them in an in-browser code editor, run and submit against
+test cases, follow interview tracks, and track your progress.
 
-First, run the development server:
+Built with Next.js 16 (App Router) and React 19.
+
+## Stack
+
+- Next.js 16 (App Router) + React 19, TypeScript
+- Tailwind CSS v4, `next-themes` (light/dark)
+- Monaco editor (`@monaco-editor/react`) for the solve arena
+- Sentry for error tracking + tracing
+- Vitest + Testing Library (unit), Playwright (e2e)
+
+## Getting started
+
+Requirements: Node 20+.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+cp .env.example .env.local     # then fill in as needed
+npm run dev                    # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Out of the box the app runs in **mock mode** (see below), so it works fully with
+no backend running.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Environment
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+See [.env.example](.env.example) for all variables. Key ones:
 
-## Learn More
+| Variable | Purpose |
+|----------|---------|
+| `NEXT_PUBLIC_API_MODE` | `mock` (in-file data, default), `live` (real backend), or `auto` |
+| `NEXT_PUBLIC_API_URL` | Base URL of the backend API in live/auto mode |
+| `NEXT_PUBLIC_API_FALLBACK_TO_MOCK` | In live mode, fall back to mock on API error. Set `false` in production so failures surface |
+| `NEXT_PUBLIC_SENTRY_DSN` / `SENTRY_DSN` | Sentry client / server DSNs (capture is off unless set) |
 
-To learn more about Next.js, take a look at the following resources:
+**Mock vs live:** every data call goes through a switch in
+[`src/lib/api.ts`](src/lib/api.ts). In `mock` mode it returns bundled sample
+data so the UI is fully usable offline. In `live`/`auto` mode it calls the
+backend (attaching the stored bearer token) and, unless
+`NEXT_PUBLIC_API_FALLBACK_TO_MOCK=false`, falls back to mock data on error.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Scripts
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Script | What it does |
+|--------|--------------|
+| `npm run dev` | Dev server |
+| `npm run build` | Production build |
+| `npm run start` | Serve the production build |
+| `npm run lint` | ESLint |
+| `npm run typecheck` | `tsc --noEmit` |
+| `npm run test:unit` | Vitest unit tests |
+| `npm run test:e2e` | Playwright end-to-end tests |
 
-## Deploy on Vercel
+## Project structure
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+src/
+  app/                 App Router routes (dashboard, problems, arena, profile, ...)
+    problems/[slug]/   the solve "arena" (Monaco editor, run/submit, history)
+    components/        shared UI (Navbar, Sidebar, ThemeSwitcher, ...)
+  lib/api.ts           data layer with the mock/live switch
+  context/AuthContext  auth state
+  middleware.ts        route gating on the auth cookie
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Testing
+
+```bash
+npm run test:unit      # Vitest
+npm run test:e2e       # Playwright (installs browsers on first run)
+```
+
+CI (`.github/workflows/ci.yml`) runs lint, typecheck, unit tests, and build,
+then e2e against a production build.
+
+## Deploy
+
+Optimized for [Vercel](https://vercel.com/). Set the production env vars
+(`NEXT_PUBLIC_API_MODE=live`, a real `NEXT_PUBLIC_API_URL`, Sentry DSNs) in the
+project settings before deploying.
