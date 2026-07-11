@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useParams, useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 import { Group, Panel, Separator } from "react-resizable-panels";
 import {
   ArrowLeft,
@@ -29,7 +30,7 @@ const MonacoEditor = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-full items-center justify-center text-sm text-zinc-400">
+      <div className="flex h-full items-center justify-center text-sm text-zinc-500 dark:text-zinc-400">
         Loading editor...
       </div>
     ),
@@ -53,10 +54,10 @@ function formatSubmissionDate(value: string): string {
 function DifficultyBadge({ difficulty }: { difficulty: ProblemDetail["difficulty"] }) {
   const classes =
     difficulty === "Easy"
-      ? "bg-emerald-500/15 text-emerald-300 border-emerald-500/20"
+      ? "bg-emerald-500/15 text-emerald-700 border-emerald-500/30 dark:text-emerald-300 dark:border-emerald-500/20"
       : difficulty === "Medium"
-      ? "bg-amber-500/15 text-amber-300 border-amber-500/20"
-      : "bg-red-500/15 text-red-300 border-red-500/20";
+      ? "bg-amber-500/15 text-amber-700 border-amber-500/30 dark:text-amber-300 dark:border-amber-500/20"
+      : "bg-red-500/15 text-red-700 border-red-500/30 dark:text-red-300 dark:border-red-500/20";
 
   return (
     <span className={`rounded-md border px-2 py-0.5 text-xs font-semibold ${classes}`}>
@@ -68,7 +69,7 @@ function DifficultyBadge({ difficulty }: { difficulty: ProblemDetail["difficulty
 function ResultView({ result }: { result: SubmissionResult | null }) {
   if (!result) {
     return (
-      <div className="flex h-full items-center justify-center px-6 text-sm text-zinc-400">
+      <div className="flex h-full items-center justify-center px-6 text-sm text-zinc-500 dark:text-zinc-400">
         No execution yet for this tab.
       </div>
     );
@@ -81,25 +82,31 @@ function ResultView({ result }: { result: SubmissionResult | null }) {
       <div
         className={`mb-4 rounded-md border px-3 py-2 ${
           positive
-            ? "border-emerald-700/50 bg-emerald-500/10"
-            : "border-rose-700/50 bg-rose-500/10"
+            ? "border-emerald-500/40 bg-emerald-500/10 dark:border-emerald-700/50"
+            : "border-rose-500/40 bg-rose-500/10 dark:border-rose-700/50"
         }`}
       >
-        <div className={`font-semibold ${positive ? "text-emerald-300" : "text-rose-300"}`}>
+        <div
+          className={`font-semibold ${
+            positive
+              ? "text-emerald-700 dark:text-emerald-300"
+              : "text-rose-700 dark:text-rose-300"
+          }`}
+        >
           {result.status}
         </div>
-        <p className="mt-1 text-xs text-zinc-300">{result.message}</p>
-        <div className="mt-2 text-xs text-zinc-400">
+        <p className="mt-1 text-xs text-zinc-600 dark:text-zinc-300">{result.message}</p>
+        <div className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">
           {result.mode === "run" ? "Sample" : "Hidden"} tests: {result.passedCount}/
           {result.totalCount} | Runtime: {result.runtimeMs}ms | Memory: {result.memoryMb}MB
-          <span className="ml-2 rounded border border-zinc-700 px-1.5 py-0.5 text-[10px] uppercase tracking-wide">
+          <span className="ml-2 rounded border border-zinc-300 px-1.5 py-0.5 text-[10px] uppercase tracking-wide dark:border-zinc-700">
             {result.source}
           </span>
         </div>
       </div>
 
       {result.traceback ? (
-        <pre className="mb-4 overflow-x-auto rounded-md border border-rose-700/40 bg-rose-500/10 p-3 text-xs text-rose-200">
+        <pre className="mb-4 overflow-x-auto rounded-md border border-rose-500/40 bg-rose-500/10 p-3 text-xs text-rose-700 dark:border-rose-700/40 dark:text-rose-200">
           {result.traceback}
         </pre>
       ) : null}
@@ -110,26 +117,32 @@ function ResultView({ result }: { result: SubmissionResult | null }) {
             key={`${testCase.visibility}-${testCase.name}`}
             className={`rounded-md border px-3 py-2 ${
               testCase.passed
-                ? "border-emerald-700/40 bg-emerald-500/5"
-                : "border-rose-700/40 bg-rose-500/5"
+                ? "border-emerald-500/40 bg-emerald-500/5 dark:border-emerald-700/40"
+                : "border-rose-500/40 bg-rose-500/5 dark:border-rose-700/40"
             }`}
           >
-            <p className={testCase.passed ? "text-emerald-300" : "text-rose-300"}>
+            <p
+              className={
+                testCase.passed
+                  ? "text-emerald-700 dark:text-emerald-300"
+                  : "text-rose-700 dark:text-rose-300"
+              }
+            >
               {testCase.name}: {testCase.passed ? "Passed" : "Failed"}
             </p>
             {testCase.input ? (
-              <p className="mt-1 text-xs text-zinc-400">Input: {testCase.input}</p>
+              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Input: {testCase.input}</p>
             ) : null}
             {testCase.expectedOutput ? (
-              <p className="mt-1 text-xs text-zinc-400">
+              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                 Expected: {testCase.expectedOutput}
               </p>
             ) : null}
             {testCase.actualOutput ? (
-              <p className="mt-1 text-xs text-zinc-400">Got: {testCase.actualOutput}</p>
+              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">Got: {testCase.actualOutput}</p>
             ) : null}
             {testCase.errorMessage ? (
-              <p className="mt-1 text-xs text-zinc-400">{testCase.errorMessage}</p>
+              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{testCase.errorMessage}</p>
             ) : null}
           </article>
         ))}
@@ -141,6 +154,7 @@ function ResultView({ result }: { result: SubmissionResult | null }) {
 export default function ProblemArenaPage() {
   const router = useRouter();
   const params = useParams<{ slug: string }>();
+  const { resolvedTheme } = useTheme();
   const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
 
   const [problem, setProblem] = useState<ProblemDetail | null>(null);
@@ -163,8 +177,11 @@ export default function ProblemArenaPage() {
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isDesktop, setIsDesktop] = useState(true);
-  const [editorTheme, setEditorTheme] = useState<"vs-dark" | "light">("vs-dark");
   const [isEditorialUnlocked, setIsEditorialUnlocked] = useState(false);
+
+  // Editor theme follows the app theme (next-themes), so there is no separate
+  // theme-detection mechanism competing with it.
+  const editorTheme = resolvedTheme === "light" ? "light" : "vs-dark";
 
   const problemPaneRef = useRef<HTMLElement | null>(null);
   const consolePaneRef = useRef<HTMLElement | null>(null);
@@ -198,28 +215,13 @@ export default function ProblemArenaPage() {
     }
 
     const desktopMedia = window.matchMedia("(min-width: 1024px)");
-    const colorSchemeMedia = window.matchMedia("(prefers-color-scheme: dark)");
-    const root = document.documentElement;
-
     const syncLayout = () => setIsDesktop(desktopMedia.matches);
-    const syncTheme = () => {
-      const hasDarkClass = root.classList.contains("dark");
-      setEditorTheme(hasDarkClass || colorSchemeMedia.matches ? "vs-dark" : "light");
-    };
 
     syncLayout();
-    syncTheme();
-
     desktopMedia.addEventListener("change", syncLayout);
-    colorSchemeMedia.addEventListener("change", syncTheme);
-
-    const observer = new MutationObserver(syncTheme);
-    observer.observe(root, { attributes: true, attributeFilter: ["class"] });
 
     return () => {
       desktopMedia.removeEventListener("change", syncLayout);
-      colorSchemeMedia.removeEventListener("change", syncTheme);
-      observer.disconnect();
     };
   }, []);
 
@@ -457,7 +459,7 @@ export default function ProblemArenaPage() {
 
   if (isLoadingProblem) {
     return (
-      <div className="flex h-screen items-center justify-center bg-zinc-950 text-zinc-200">
+      <div className="flex h-screen items-center justify-center bg-white text-zinc-700 dark:bg-zinc-950 dark:text-zinc-200">
         <Loader2 className="mr-2 h-5 w-5 animate-spin" />
         Loading problem arena...
       </div>
@@ -466,13 +468,13 @@ export default function ProblemArenaPage() {
 
   if (error || !problem) {
     return (
-      <div className="flex h-screen flex-col items-center justify-center gap-4 bg-zinc-950 px-6 text-zinc-100">
-        <p className="text-center text-sm text-zinc-300">
+      <div className="flex h-screen flex-col items-center justify-center gap-4 bg-white px-6 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
+        <p className="text-center text-sm text-zinc-600 dark:text-zinc-300">
           {error ?? "Problem could not be loaded."}
         </p>
         <button
           onClick={() => router.push("/problems")}
-          className="rounded-md border border-zinc-700 px-4 py-2 text-sm hover:bg-zinc-800"
+          className="rounded-md border border-zinc-300 px-4 py-2 text-sm hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800"
         >
           Back to Problem List
         </button>
@@ -481,12 +483,12 @@ export default function ProblemArenaPage() {
   }
 
   return (
-    <div className="h-screen overflow-hidden bg-zinc-950 text-zinc-100">
-      <header className="flex h-14 items-center justify-between border-b border-zinc-800 px-3 md:px-4">
+    <div className="h-screen overflow-hidden bg-white text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
+      <header className="flex h-14 items-center justify-between border-b border-zinc-200 px-3 dark:border-zinc-800 md:px-4">
         <div className="flex min-w-0 items-center gap-2 md:gap-3">
           <button
             onClick={() => router.push("/problems")}
-            className="rounded-md border border-zinc-700 p-1.5 text-zinc-300 hover:bg-zinc-800"
+            className="rounded-md border border-zinc-300 p-1.5 text-zinc-600 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
             aria-label="Back to problems"
           >
             <ArrowLeft className="h-4 w-4" />
@@ -495,9 +497,9 @@ export default function ProblemArenaPage() {
             <h1 className="truncate text-sm font-semibold">{problem.title}</h1>
             <div className="mt-0.5 flex items-center gap-2">
               <DifficultyBadge difficulty={problem.difficulty} />
-              <span className="text-xs text-zinc-400">{problem.category}</span>
+              <span className="text-xs text-zinc-500 dark:text-zinc-400">{problem.category}</span>
               {problem.companies?.length ? (
-                <span className="text-xs text-zinc-500">
+                <span className="text-xs text-zinc-400 dark:text-zinc-500">
                   {problem.companies.slice(0, 2).join(", ")}
                 </span>
               ) : null}
@@ -509,14 +511,14 @@ export default function ProblemArenaPage() {
           <ThemeSwitcher compact />
           <button
             onClick={() => setCode(problem.starterCode)}
-            className="inline-flex items-center rounded-md border border-zinc-700 px-3 py-1.5 text-sm text-zinc-200 transition hover:bg-zinc-800"
+            className="inline-flex items-center rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
           >
             Reset
           </button>
           <button
             onClick={() => void handleRun()}
             disabled={!canExecute}
-            className="inline-flex items-center gap-1.5 rounded-md border border-zinc-700 px-3 py-1.5 text-sm text-zinc-200 transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-40"
+            className="inline-flex items-center gap-1.5 rounded-md border border-zinc-300 px-3 py-1.5 text-sm text-zinc-700 transition hover:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
           >
             {isRunning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
             Run
@@ -542,8 +544,8 @@ export default function ProblemArenaPage() {
             <section
               ref={problemPaneRef}
               tabIndex={-1}
-              className={`h-full overflow-y-auto border-r border-zinc-800 bg-zinc-900/60 p-4 md:p-6 focus:outline-none ${
-                activePane === "problem" ? "ring-1 ring-zinc-500" : ""
+              className={`h-full overflow-y-auto border-r border-zinc-200 bg-zinc-50 p-4 focus:outline-none dark:border-zinc-800 dark:bg-zinc-900/60 md:p-6 ${
+                activePane === "problem" ? "ring-1 ring-zinc-400 dark:ring-zinc-500" : ""
               }`}
               onFocus={() => setActivePane("problem")}
             >
@@ -552,8 +554,8 @@ export default function ProblemArenaPage() {
                   onClick={() => setActiveLeftTab("description")}
                   className={`rounded-md px-2.5 py-1 text-xs font-medium ${
                     activeLeftTab === "description"
-                      ? "bg-zinc-100 text-zinc-900"
-                      : "text-zinc-400 hover:bg-zinc-800"
+                      ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+                      : "text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
                   }`}
                 >
                   Description
@@ -562,8 +564,8 @@ export default function ProblemArenaPage() {
                   onClick={() => setActiveLeftTab("editorial")}
                   className={`rounded-md px-2.5 py-1 text-xs font-medium ${
                     activeLeftTab === "editorial"
-                      ? "bg-zinc-100 text-zinc-900"
-                      : "text-zinc-400 hover:bg-zinc-800"
+                      ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+                      : "text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
                   }`}
                 >
                   Editorial
@@ -572,8 +574,8 @@ export default function ProblemArenaPage() {
                   onClick={() => setActiveLeftTab("history")}
                   className={`rounded-md px-2.5 py-1 text-xs font-medium ${
                     activeLeftTab === "history"
-                      ? "bg-zinc-100 text-zinc-900"
-                      : "text-zinc-400 hover:bg-zinc-800"
+                      ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+                      : "text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
                   }`}
                 >
                   History
@@ -582,22 +584,22 @@ export default function ProblemArenaPage() {
 
               {activeLeftTab === "description" ? (
                 <>
-                  <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-300">
+                  <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-600 dark:text-zinc-300">
                     Problem
                   </h2>
-                  <p className="whitespace-pre-wrap text-sm leading-6 text-zinc-200">
+                  <p className="whitespace-pre-wrap text-sm leading-6 text-zinc-700 dark:text-zinc-200">
                     {problem.description}
                   </p>
 
                   {problem.constraints.length > 0 ? (
                     <div className="mt-6">
-                      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-400">
+                      <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
                         Constraints
                       </h3>
-                      <ul className="space-y-2 text-sm text-zinc-300">
+                      <ul className="space-y-2 text-sm text-zinc-600 dark:text-zinc-300">
                         {problem.constraints.map((constraint) => (
                           <li key={constraint} className="flex items-start gap-2">
-                            <span className="mt-1 block h-1.5 w-1.5 rounded-full bg-zinc-500" />
+                            <span className="mt-1 block h-1.5 w-1.5 rounded-full bg-zinc-400 dark:bg-zinc-500" />
                             <span>{constraint}</span>
                           </li>
                         ))}
@@ -607,29 +609,29 @@ export default function ProblemArenaPage() {
 
                   {problem.examples.length > 0 ? (
                     <div className="mt-6 space-y-3">
-                      <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
+                      <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
                         Examples
                       </h3>
                       {problem.examples.map((example, index) => (
                         <div
                           key={`${example.input}-${index}`}
-                          className="rounded-md border border-zinc-800 bg-zinc-950/50 p-3"
+                          className="rounded-md border border-zinc-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-950/50"
                         >
-                          <p className="mb-2 text-xs font-semibold text-zinc-400">
+                          <p className="mb-2 text-xs font-semibold text-zinc-500 dark:text-zinc-400">
                             Example {index + 1}
                           </p>
-                          <div className="space-y-2 text-xs font-mono text-zinc-300">
+                          <div className="space-y-2 font-mono text-xs text-zinc-600 dark:text-zinc-300">
                             <p>
-                              <span className="text-zinc-500">Input: </span>
+                              <span className="text-zinc-400 dark:text-zinc-500">Input: </span>
                               {example.input}
                             </p>
                             <p>
-                              <span className="text-zinc-500">Output: </span>
+                              <span className="text-zinc-400 dark:text-zinc-500">Output: </span>
                               {example.output}
                             </p>
                             {example.explanation ? (
                               <p>
-                                <span className="text-zinc-500">Explanation: </span>
+                                <span className="text-zinc-400 dark:text-zinc-500">Explanation: </span>
                                 {example.explanation}
                               </p>
                             ) : null}
@@ -644,41 +646,42 @@ export default function ProblemArenaPage() {
               {activeLeftTab === "editorial" ? (
                 isEditorialUnlocked ? (
                   <div>
-                    <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-300">
+                    <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-600 dark:text-zinc-300">
                       Editorial
                     </h2>
-                    <p className="text-sm text-zinc-200">{problem.editorial.summary}</p>
-                    <h3 className="mt-4 text-xs font-semibold uppercase tracking-wide text-zinc-400">
+                    <p className="text-sm text-zinc-700 dark:text-zinc-200">{problem.editorial.summary}</p>
+                    <h3 className="mt-4 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
                       Approach
                     </h3>
-                    <p className="mt-1 text-sm text-zinc-300">{problem.editorial.approach}</p>
+                    <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">{problem.editorial.approach}</p>
 
                     <div className="mt-4 grid grid-cols-1 gap-2 md:grid-cols-2">
-                      <article className="rounded border border-zinc-800 bg-zinc-950/50 p-3 text-xs text-zinc-300">
-                        <p className="text-zinc-500">Time Complexity</p>
+                      <article className="rounded border border-zinc-200 bg-white p-3 text-xs text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950/50 dark:text-zinc-300">
+                        <p className="text-zinc-400 dark:text-zinc-500">Time Complexity</p>
                         <p className="mt-1">{problem.editorial.timeComplexity}</p>
                       </article>
-                      <article className="rounded border border-zinc-800 bg-zinc-950/50 p-3 text-xs text-zinc-300">
-                        <p className="text-zinc-500">Space Complexity</p>
+                      <article className="rounded border border-zinc-200 bg-white p-3 text-xs text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950/50 dark:text-zinc-300">
+                        <p className="text-zinc-400 dark:text-zinc-500">Space Complexity</p>
                         <p className="mt-1">{problem.editorial.spaceComplexity}</p>
                       </article>
                     </div>
 
-                    <h3 className="mt-4 text-xs font-semibold uppercase tracking-wide text-zinc-400">
+                    <h3 className="mt-4 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
                       Common Pitfalls
                     </h3>
-                    <ul className="mt-2 space-y-2 text-sm text-zinc-300">
+                    <ul className="mt-2 space-y-2 text-sm text-zinc-600 dark:text-zinc-300">
                       {problem.editorial.pitfalls.map((pitfall) => (
                         <li key={pitfall} className="flex items-start gap-2">
-                          <ChevronRight className="mt-0.5 h-4 w-4 text-zinc-500" />
+                          <ChevronRight className="mt-0.5 h-4 w-4 text-zinc-400 dark:text-zinc-500" />
                           <span>{pitfall}</span>
                         </li>
                       ))}
                     </ul>
                   </div>
                 ) : (
-                  <div className="rounded-md border border-zinc-800 bg-zinc-950/60 p-4 text-sm text-zinc-300">
-                    Editorial unlocks after an <span className="font-semibold text-emerald-300">Accepted</span>{" "}
+                  <div className="rounded-md border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950/60 dark:text-zinc-300">
+                    Editorial unlocks after an{" "}
+                    <span className="font-semibold text-emerald-600 dark:text-emerald-300">Accepted</span>{" "}
                     submission on hidden tests.
                   </div>
                 )
@@ -686,38 +689,38 @@ export default function ProblemArenaPage() {
 
               {activeLeftTab === "history" ? (
                 <div>
-                  <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-300">
+                  <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-600 dark:text-zinc-300">
                     Submission History
                   </h2>
                   {isLoadingHistory ? (
-                    <p className="text-sm text-zinc-400">Loading history...</p>
+                    <p className="text-sm text-zinc-500 dark:text-zinc-400">Loading history...</p>
                   ) : history.length === 0 ? (
-                    <p className="text-sm text-zinc-400">No runs yet for this problem.</p>
+                    <p className="text-sm text-zinc-500 dark:text-zinc-400">No runs yet for this problem.</p>
                   ) : (
                     <div className="space-y-2">
                       {history.map((entry) => (
                         <article
                           key={entry.id}
-                          className="rounded-md border border-zinc-800 bg-zinc-950/50 p-3"
+                          className="rounded-md border border-zinc-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-950/50"
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div>
                               <p
                                 className={`text-sm font-medium ${
                                   entry.result.status === "Accepted"
-                                    ? "text-emerald-300"
+                                    ? "text-emerald-600 dark:text-emerald-300"
                                     : entry.result.status === "Failed"
-                                    ? "text-amber-300"
-                                    : "text-rose-300"
+                                    ? "text-amber-600 dark:text-amber-300"
+                                    : "text-rose-600 dark:text-rose-300"
                                 }`}
                               >
                                 {entry.mode === "run" ? "Run" : "Submit"}: {entry.result.status}
                               </p>
-                              <p className="mt-1 flex items-center gap-1 text-xs text-zinc-500">
+                              <p className="mt-1 flex items-center gap-1 text-xs text-zinc-400 dark:text-zinc-500">
                                 <Clock3 className="h-3.5 w-3.5" />
                                 {formatSubmissionDate(entry.createdAt)}
                               </p>
-                              <p className="mt-1 text-xs text-zinc-400">
+                              <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
                                 {entry.result.passedCount}/{entry.result.totalCount} tests | Runtime {" "}
                                 {entry.result.runtimeMs}ms
                               </p>
@@ -725,13 +728,13 @@ export default function ProblemArenaPage() {
                             <div className="flex items-center gap-1">
                               <button
                                 onClick={() => loadHistoryCode(entry)}
-                                className="rounded border border-zinc-700 px-2 py-1 text-xs text-zinc-300 hover:bg-zinc-800"
+                                className="rounded border border-zinc-300 px-2 py-1 text-xs text-zinc-600 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
                               >
                                 Load
                               </button>
                               <button
                                 onClick={() => void rerunHistoryRecord(entry)}
-                                className="inline-flex items-center gap-1 rounded border border-zinc-700 px-2 py-1 text-xs text-zinc-300 hover:bg-zinc-800"
+                                className="inline-flex items-center gap-1 rounded border border-zinc-300 px-2 py-1 text-xs text-zinc-600 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
                               >
                                 <RotateCw className="h-3.5 w-3.5" />
                                 Re-run
@@ -747,18 +750,20 @@ export default function ProblemArenaPage() {
             </section>
           </Panel>
 
-          <Separator className="w-1 bg-zinc-800 transition hover:bg-zinc-700" />
+          <Separator className="w-1 bg-zinc-200 transition hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700" />
 
           <Panel defaultSize={isDesktop ? 62 : 52} minSize={28}>
             <Group orientation="vertical" className="h-full">
               <Panel defaultSize={72} minSize={35}>
                 <section
-                  className={`h-full bg-zinc-950 ${activePane === "editor" ? "ring-1 ring-zinc-500" : ""}`}
+                  className={`h-full bg-white dark:bg-zinc-950 ${
+                    activePane === "editor" ? "ring-1 ring-zinc-400 dark:ring-zinc-500" : ""
+                  }`}
                   onFocus={() => setActivePane("editor")}
                 >
-                  <div className="flex h-10 items-center justify-between border-b border-zinc-800 px-3 text-xs text-zinc-400">
+                  <div className="flex h-10 items-center justify-between border-b border-zinc-200 px-3 text-xs text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
                     <span>main.py</span>
-                    <span className="text-[11px] text-zinc-500">
+                    <span className="text-[11px] text-zinc-400 dark:text-zinc-500">
                       Run: Ctrl/Cmd+Enter | Submit: Ctrl/Cmd+Shift+Enter | Focus panes: Alt+1/2/3
                     </span>
                   </div>
@@ -786,25 +791,25 @@ export default function ProblemArenaPage() {
                 </section>
               </Panel>
 
-              <Separator className="h-1 bg-zinc-800 transition hover:bg-zinc-700" />
+              <Separator className="h-1 bg-zinc-200 transition hover:bg-zinc-300 dark:bg-zinc-800 dark:hover:bg-zinc-700" />
 
               <Panel defaultSize={28} minSize={18}>
                 <section
                   ref={consolePaneRef}
                   tabIndex={-1}
-                  className={`h-full border-t border-zinc-800 bg-zinc-900 focus:outline-none ${
-                    activePane === "console" ? "ring-1 ring-zinc-500" : ""
+                  className={`h-full border-t border-zinc-200 bg-zinc-50 focus:outline-none dark:border-zinc-800 dark:bg-zinc-900 ${
+                    activePane === "console" ? "ring-1 ring-zinc-400 dark:ring-zinc-500" : ""
                   }`}
                   onFocus={() => setActivePane("console")}
                 >
-                  <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-2">
-                    <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-400">
+                  <div className="flex items-center justify-between border-b border-zinc-200 px-4 py-2 dark:border-zinc-800">
+                    <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
                       <button
                         onClick={() => setActiveConsoleTab("sample")}
                         className={`rounded px-2 py-1 ${
                           activeConsoleTab === "sample"
-                            ? "bg-zinc-100 text-zinc-900"
-                            : "text-zinc-400 hover:bg-zinc-800"
+                            ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+                            : "text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
                         }`}
                       >
                         Official Testcases
@@ -813,8 +818,8 @@ export default function ProblemArenaPage() {
                         onClick={() => setActiveConsoleTab("hidden")}
                         className={`rounded px-2 py-1 ${
                           activeConsoleTab === "hidden"
-                            ? "bg-zinc-100 text-zinc-900"
-                            : "text-zinc-400 hover:bg-zinc-800"
+                            ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900"
+                            : "text-zinc-500 hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
                         }`}
                       >
                         Hidden Testcases
@@ -822,7 +827,7 @@ export default function ProblemArenaPage() {
                     </div>
                     <button
                       onClick={() => (problem ? void refreshHistory(problem.slug) : undefined)}
-                      className="inline-flex items-center gap-1 rounded border border-zinc-700 px-2 py-1 text-xs text-zinc-300 hover:bg-zinc-800"
+                      className="inline-flex items-center gap-1 rounded border border-zinc-300 px-2 py-1 text-xs text-zinc-600 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-300 dark:hover:bg-zinc-800"
                     >
                       <RefreshCcw className="h-3.5 w-3.5" />
                       Refresh
@@ -831,9 +836,9 @@ export default function ProblemArenaPage() {
 
                   {isExecuting ? (
                     <div className="space-y-3 p-4">
-                      <div className="h-4 w-36 animate-pulse rounded bg-zinc-700" />
-                      <div className="h-3 w-full animate-pulse rounded bg-zinc-800" />
-                      <div className="h-3 w-5/6 animate-pulse rounded bg-zinc-800" />
+                      <div className="h-4 w-36 animate-pulse rounded bg-zinc-200 dark:bg-zinc-700" />
+                      <div className="h-3 w-full animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
+                      <div className="h-3 w-5/6 animate-pulse rounded bg-zinc-200 dark:bg-zinc-800" />
                     </div>
                   ) : activeConsoleTab === "sample" ? (
                     <ResultView result={runResult} />
