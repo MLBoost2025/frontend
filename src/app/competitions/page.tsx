@@ -1,33 +1,9 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import MainLayout from "../components/MainLayout";
-
-const UPCOMING = [
-  {
-    id: "c1",
-    title: "Regression Sprint #12",
-    startsIn: "2h 15m",
-    participants: 1240,
-    duration: "90 min",
-    difficulty: "Medium",
-  },
-  {
-    id: "c2",
-    title: "Feature Engineering Arena",
-    startsIn: "Tomorrow",
-    participants: 980,
-    duration: "120 min",
-    difficulty: "Hard",
-  },
-  {
-    id: "c3",
-    title: "Pandas Speed Round",
-    startsIn: "3 days",
-    participants: 2100,
-    duration: "60 min",
-    difficulty: "Easy",
-  },
-];
+import { fetchCompetitions } from "@/lib/api";
+import { Competition } from "@/types";
 
 const LEADERBOARD = [
   { rank: 1, name: "Aarav", score: 1980 },
@@ -36,43 +12,137 @@ const LEADERBOARD = [
   { rank: 4, name: "Saanvi", score: 1890 },
 ];
 
+function StatusBadge({ status }: { status: Competition["status"] }) {
+  const styles =
+    status === "live"
+      ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300"
+      : status === "upcoming"
+      ? "bg-amber-500/15 text-amber-700 dark:text-amber-300"
+      : "bg-zinc-500/15 text-zinc-600 dark:text-zinc-300";
+  const label = status === "live" ? "Live" : status === "upcoming" ? "Upcoming" : "Ended";
+  return (
+    <span className={`rounded-md px-2 py-0.5 text-xs font-semibold ${styles}`}>{label}</span>
+  );
+}
+
+function timing(competition: Competition): string {
+  const now = Date.now();
+  const start = new Date(competition.startTime).getTime();
+  const end = new Date(competition.endTime).getTime();
+
+  const rel = (ms: number): string => {
+    const mins = Math.round(ms / 60000);
+    if (mins < 60) return `${Math.max(mins, 1)}m`;
+    const hours = Math.round(mins / 60);
+    if (hours < 24) return `${hours}h`;
+    return `${Math.round(hours / 24)}d`;
+  };
+
+  if (competition.status === "upcoming") return `Starts in ${rel(start - now)}`;
+  if (competition.status === "live") return `Ends in ${rel(end - now)}`;
+  return "Ended";
+}
+
+function durationLabel(competition: Competition): string {
+  const mins = Math.round(
+    (new Date(competition.endTime).getTime() - new Date(competition.startTime).getTime()) / 60000
+  );
+  if (Number.isNaN(mins) || mins <= 0) return "—";
+  return mins < 60 ? `${mins} min` : `${Math.round(mins / 60)} hr`;
+}
+
 export default function CompetitionsPage() {
+  const [competitions, setCompetitions] = useState<Competition[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const data = await fetchCompetitions();
+        if (active) setCompetitions(data);
+      } catch {
+        if (active) setError("Could not load competitions.");
+      } finally {
+        if (active) setIsLoading(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const featured = competitions.find((c) => c.status === "live") ?? competitions[0];
+
   return (
     <MainLayout
       title="Competitions"
       subtitle="Timed contests designed for ML interview readiness"
     >
       <section className="rounded-2xl bg-gradient-to-r from-orange-600 via-amber-500 to-orange-500 px-6 py-6 text-white">
-        <p className="text-xs uppercase tracking-[0.2em] text-orange-100">Weekly Event</p>
-        <h2 className="mt-2 text-2xl font-semibold tracking-tight">Model Metrics Championship</h2>
+        <p className="text-xs uppercase tracking-[0.2em] text-orange-100">
+          {featured?.status === "live" ? "Live Now" : "Featured Event"}
+        </p>
+        <h2 className="mt-2 text-2xl font-semibold tracking-tight">
+          {featured?.title ?? "No contests yet"}
+        </h2>
         <p className="mt-2 text-sm text-orange-50">
-          Solve 5 evaluation-heavy challenges under 75 minutes.
+          {featured?.description ?? "Check back soon for upcoming ML competitions."}
         </p>
       </section>
+
+      {error ? (
+        <p className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-700 dark:text-rose-300">
+          {error}
+        </p>
+      ) : null}
 
       <section className="grid grid-cols-1 gap-4 xl:grid-cols-3">
         <div className="xl:col-span-2 rounded-xl border border-zinc-200 bg-white/90 p-5 dark:border-zinc-800 dark:bg-zinc-900/80">
           <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
-            Upcoming Contests
+            Contests
           </h3>
-          <div className="space-y-3">
-            {UPCOMING.map((contest) => (
-              <article
-                key={contest.id}
-                className="grid gap-3 rounded-lg border border-zinc-200 px-4 py-3 dark:border-zinc-800 md:grid-cols-[1fr_auto_auto_auto]"
-              >
-                <div>
-                  <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">{contest.title}</p>
-                  <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
-                    Starts in {contest.startsIn}
+
+          {isLoading ? (
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">Loading contests...</p>
+          ) : competitions.length === 0 ? (
+            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+              No contests scheduled right now.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {competitions.map((contest) => (
+                <article
+                  key={contest.id}
+                  className="grid gap-3 rounded-lg border border-zinc-200 px-4 py-3 dark:border-zinc-800 md:grid-cols-[1fr_auto_auto_auto] md:items-center"
+                >
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                        {contest.title}
+                      </p>
+                      <StatusBadge status={contest.status} />
+                    </div>
+                    <p className="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                      {timing(contest)}
+                    </p>
+                  </div>
+                  <p className="text-xs text-zinc-600 dark:text-zinc-300">
+                    {contest.participantCount.toLocaleString()} participants
                   </p>
-                </div>
-                <p className="text-xs text-zinc-600 dark:text-zinc-300">{contest.participants} participants</p>
-                <p className="text-xs text-zinc-600 dark:text-zinc-300">{contest.duration}</p>
-                <p className="text-xs font-medium text-orange-600 dark:text-orange-300">{contest.difficulty}</p>
-              </article>
-            ))}
-          </div>
+                  <p className="text-xs text-zinc-600 dark:text-zinc-300">
+                    {durationLabel(contest)}
+                  </p>
+                  <p className="text-xs font-medium text-orange-600 dark:text-orange-300">
+                    {contest.problemCount} problems
+                  </p>
+                </article>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="rounded-xl border border-zinc-200 bg-white/90 p-5 dark:border-zinc-800 dark:bg-zinc-900/80">
@@ -85,7 +155,9 @@ export default function CompetitionsPage() {
                 key={entry.rank}
                 className="flex items-center justify-between rounded-md border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-800"
               >
-                <span className="font-medium text-zinc-800 dark:text-zinc-100">#{entry.rank} {entry.name}</span>
+                <span className="font-medium text-zinc-800 dark:text-zinc-100">
+                  #{entry.rank} {entry.name}
+                </span>
                 <span className="text-zinc-500 dark:text-zinc-400">{entry.score}</span>
               </div>
             ))}

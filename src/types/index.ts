@@ -173,6 +173,19 @@ export interface FilterState {
   statusFilter: "all" | "todo" | "solved";
 }
 
+export type CompetitionStatus = "upcoming" | "live" | "ended";
+
+export interface Competition {
+  id: string;
+  title: string;
+  description?: string;
+  startTime: string;
+  endTime: string;
+  participantCount: number;
+  problemCount: number;
+  status: CompetitionStatus;
+}
+
 export interface RecentActivityItem {
   id: string;
   title: string;

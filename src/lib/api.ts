@@ -1,6 +1,8 @@
 import {
   AuthSession,
   CompanyTrack,
+  Competition,
+  CompetitionStatus,
   ContestRank,
   Difficulty,
   ExecutionMode,
@@ -1614,6 +1616,100 @@ export async function fetchRecentActivity(limit = 5): Promise<RecentActivityItem
     "fetch_recent_activity",
     () => liveFetchRecentActivity(limit),
     () => mockFetchRecentActivity(limit)
+  );
+}
+
+function competitionStatus(startTime: string, endTime: string): CompetitionStatus {
+  const now = Date.now();
+  const start = new Date(startTime).getTime();
+  const end = new Date(endTime).getTime();
+  if (Number.isNaN(start) || Number.isNaN(end)) return "upcoming";
+  if (now < start) return "upcoming";
+  if (now > end) return "ended";
+  return "live";
+}
+
+interface LiveContest {
+  _id?: string;
+  id?: string;
+  title?: string;
+  description?: string;
+  startTime?: string;
+  endTime?: string;
+  participantCount?: number;
+  problemCount?: number;
+}
+
+function toCompetitionFromLive(raw: LiveContest): Competition {
+  const startTime = raw.startTime || new Date().toISOString();
+  const endTime = raw.endTime || startTime;
+  return {
+    id: raw._id || raw.id || "",
+    title: raw.title || "Untitled Contest",
+    description: raw.description,
+    startTime,
+    endTime,
+    participantCount: raw.participantCount ?? 0,
+    problemCount: raw.problemCount ?? 0,
+    status: competitionStatus(startTime, endTime),
+  };
+}
+
+const HOUR_MS = 60 * 60 * 1000;
+
+function mockFetchCompetitions(): Promise<Competition[]> {
+  const now = Date.now();
+  const raw: LiveContest[] = [
+    {
+      _id: "comp-live",
+      title: "Model Metrics Championship",
+      description: "Solve 5 evaluation-heavy challenges under 75 minutes.",
+      startTime: new Date(now - HOUR_MS).toISOString(),
+      endTime: new Date(now + HOUR_MS).toISOString(),
+      participantCount: 1240,
+      problemCount: 5,
+    },
+    {
+      _id: "comp-soon",
+      title: "Feature Engineering Arena",
+      description: "Timed feature-engineering gauntlet.",
+      startTime: new Date(now + 3 * HOUR_MS).toISOString(),
+      endTime: new Date(now + 5 * HOUR_MS).toISOString(),
+      participantCount: 980,
+      problemCount: 4,
+    },
+    {
+      _id: "comp-upcoming",
+      title: "Pandas Speed Round",
+      description: "Fast data-wrangling sprint.",
+      startTime: new Date(now + 3 * 24 * HOUR_MS).toISOString(),
+      endTime: new Date(now + 3 * 24 * HOUR_MS + HOUR_MS).toISOString(),
+      participantCount: 2100,
+      problemCount: 6,
+    },
+    {
+      _id: "comp-past",
+      title: "Regression Sprint #11",
+      description: "Last week's regression contest.",
+      startTime: new Date(now - 7 * 24 * HOUR_MS).toISOString(),
+      endTime: new Date(now - 7 * 24 * HOUR_MS + 2 * HOUR_MS).toISOString(),
+      participantCount: 1740,
+      problemCount: 5,
+    },
+  ];
+  return Promise.resolve(raw.map(toCompetitionFromLive));
+}
+
+async function liveFetchCompetitions(): Promise<Competition[]> {
+  const data = await fetchWithRetry<LiveContest[]>("/contests", { method: "GET" });
+  return (Array.isArray(data) ? data : []).map(toCompetitionFromLive);
+}
+
+export async function fetchCompetitions(): Promise<Competition[]> {
+  return runWithBackendSwitch(
+    "fetch_competitions",
+    () => liveFetchCompetitions(),
+    () => mockFetchCompetitions()
   );
 }
 
