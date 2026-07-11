@@ -1,5 +1,11 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
-import { getCurrentSession, loginUser, runCode, submitSolution } from "@/lib/api";
+import {
+  fetchSubmissionHistory,
+  getCurrentSession,
+  loginUser,
+  runCode,
+  submitSolution,
+} from "@/lib/api";
 
 describe("mock api", () => {
   beforeEach(() => {
@@ -56,5 +62,21 @@ describe("mock api", () => {
 
     expect(result.status).toBe("Failed");
     expect(result.score).toBeLessThan(100);
+  });
+
+  it("records a mock submission in local history", async () => {
+    const submitPromise = submitSolution(
+      "p-004",
+      `def binary_f1(y_true, y_pred):\n    return 1`
+    );
+    await vi.runAllTimersAsync();
+    await submitPromise;
+
+    const historyPromise = fetchSubmissionHistory("p-004");
+    await vi.runAllTimersAsync();
+    const history = await historyPromise;
+
+    expect(history.length).toBeGreaterThan(0);
+    expect(history[0].result.source).toBe("mock");
   });
 });

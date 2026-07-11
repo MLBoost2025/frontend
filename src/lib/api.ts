@@ -1104,7 +1104,15 @@ async function persistExecutionRecord(
   result: SubmissionResult
 ): Promise<void> {
   const record = createSubmissionRecord(problemId, code, mode, result);
-  upsertSubmissionRecord(record);
+
+  // Only cache locally for mock results. In live mode the backend is the source
+  // of truth for history and solved-state; caching live results here would
+  // create a split-brain (e.g. localStorage-derived "solved" status diverging
+  // from the server). `source` is "mock" both in mock mode and when a live
+  // call falls back to mock, which is exactly when we want the local cache.
+  if (result.source === "mock") {
+    upsertSubmissionRecord(record);
+  }
 
   void trackEvent({
     name: mode === "run" ? "code_run" : "code_submit",
