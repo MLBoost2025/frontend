@@ -44,7 +44,7 @@ export default function LearnPage() {
       ) : null}
 
       <section className="grid grid-cols-1 gap-4 lg:grid-cols-[1.8fr_1fr]">
-        <div className="rounded-xl border border-zinc-200 bg-white/90 p-5 dark:border-zinc-800 dark:bg-zinc-900/80">
+        <div className="card p-5">
           <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
             Learning Tracks
           </h3>
@@ -93,7 +93,7 @@ export default function LearnPage() {
           )}
         </div>
 
-        <aside className="rounded-xl border border-zinc-200 bg-white/90 p-5 dark:border-zinc-800 dark:bg-zinc-900/80">
+        <aside className="card p-5">
           <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
             Suggested Next
           </h3>

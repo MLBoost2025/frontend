@@ -81,7 +81,7 @@ export default function ProfilePage() {
             </article>
           </section>
 
-          <section className="rounded-xl border border-zinc-200 bg-white/90 p-5 dark:border-zinc-800 dark:bg-zinc-900/80">
+          <section className="card p-5">
             <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
               Submission Heatmap
             </h2>
@@ -103,7 +103,7 @@ export default function ProfilePage() {
           </section>
 
           <section className="grid grid-cols-1 gap-4 xl:grid-cols-2">
-            <article className="rounded-xl border border-zinc-200 bg-white/90 p-5 dark:border-zinc-800 dark:bg-zinc-900/80">
+            <article className="card p-5">
               <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
                 Solved by Topic
               </h2>
@@ -125,7 +125,7 @@ export default function ProfilePage() {
               </div>
             </article>
 
-            <article className="rounded-xl border border-zinc-200 bg-white/90 p-5 dark:border-zinc-800 dark:bg-zinc-900/80">
+            <article className="card p-5">
               <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
                 Acceptance Trend
               </h2>
@@ -146,7 +146,7 @@ export default function ProfilePage() {
             </article>
           </section>
 
-          <section className="rounded-xl border border-zinc-200 bg-white/90 p-5 dark:border-zinc-800 dark:bg-zinc-900/80">
+          <section className="card p-5">
             <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
               Recent Contest Ranks
             </h2>

@@ -1,12 +1,39 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 
+@theme {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, monospace;
+
+  /* Brand — a warm, confident amber-orange (the ML / LeetCode energy) */
+  --color-brand-50: #fff8f1;
+  --color-brand-100: #feecdc;
+  --color-brand-200: #fcd9bd;
+  --color-brand-300: #fdba8c;
+  --color-brand-400: #ff8a4c;
+  --color-brand-500: #f4661f;
+  --color-brand-600: #dd4e0f;
+  --color-brand-700: #b8390c;
+  --color-brand-800: #942f12;
+  --color-brand-900: #792a13;
+
+  /* Accent — a cool cyan (the Kaggle / data-science counterpoint) */
+  --color-accent-400: #38bdf8;
+  --color-accent-500: #0ea5e9;
+  --color-accent-600: #0284c7;
+}
+
 :root {
   color-scheme: light;
+  --bg: #f5f6f8;
+  --grid: rgba(16, 24, 40, 0.03);
 }
 
 .dark {
   color-scheme: dark;
+  --bg: #0a0b0e;
+  --grid: rgba(255, 255, 255, 0.025);
 }
 
 * {
@@ -16,16 +43,103 @@
 html,
 body {
   width: 100%;
-  height: 100%;
+  min-height: 100%;
 }
 
 body {
   margin: 0;
-  background-color: #f5f6f8;
-  color: #111827;
+  font-family: var(--font-sans);
+  background-color: var(--bg);
+  color: #10131a;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 .dark body {
-  background-color: #0a0a0a;
-  color: #f3f4f6;
+  color: #e7e9ee;
+}
+
+/* Ambient, premium background: soft brand + accent glows over a faint grid. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    radial-gradient(1100px 620px at 108% -8%, rgba(244, 102, 31, 0.07), transparent 60%),
+    radial-gradient(900px 520px at -12% 112%, rgba(14, 165, 233, 0.05), transparent 60%),
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 44px 44px, 44px 44px;
+}
+
+.dark body::before {
+  background-image:
+    radial-gradient(1000px 600px at 108% -8%, rgba(244, 102, 31, 0.12), transparent 55%),
+    radial-gradient(820px 520px at -12% 112%, rgba(14, 165, 233, 0.07), transparent 55%),
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+}
+
+::selection {
+  background: rgba(244, 102, 31, 0.22);
+}
+
+/* Refined scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(120, 130, 145, 0.35) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgba(120, 130, 145, 0.3);
+  border-radius: 99px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: rgba(120, 130, 145, 0.55);
+  background-clip: padding-box;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@layer components {
+  /* The canonical surface used across the app. */
+  .card {
+    @apply rounded-2xl border border-zinc-200/70 bg-white/80 backdrop-blur-sm
+      shadow-[0_1px_2px_rgba(16,24,40,0.04),0_4px_16px_-8px_rgba(16,24,40,0.10)]
+      dark:border-white/[0.06] dark:bg-white/[0.02] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03),0_10px_30px_-16px_rgba(0,0,0,0.6)];
+  }
+
+  .card-hover {
+    @apply transition duration-200 hover:-translate-y-0.5
+      hover:border-zinc-300/80 hover:shadow-[0_8px_30px_-12px_rgba(16,24,40,0.18)]
+      dark:hover:border-white/[0.12];
+  }
+
+  /* Small uppercase eyebrow used on card headers. */
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400;
+  }
+
+  /* Brand gradient text for hero numerals / emphasis. */
+  .text-gradient-brand {
+    @apply bg-gradient-to-r from-brand-500 to-brand-400 bg-clip-text text-transparent;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2
+      text-sm font-semibold text-white shadow-sm transition
+      hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50;
+  }
 }

@@ -13,7 +13,7 @@ interface WeeklyGoalsProps {
 
 export default function WeeklyGoals({ goals, title = "Weekly Goals" }: WeeklyGoalsProps) {
   return (
-    <section className="rounded-xl border border-zinc-200 bg-white/90 p-5 backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/80">
+    <section className="card p-5">
       <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
         {title}
       </h2>

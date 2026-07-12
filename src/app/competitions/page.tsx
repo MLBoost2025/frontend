@@ -101,7 +101,7 @@ export default function CompetitionsPage() {
       ) : null}
 
       <section className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-        <div className="xl:col-span-2 rounded-xl border border-zinc-200 bg-white/90 p-5 dark:border-zinc-800 dark:bg-zinc-900/80">
+        <div className="xl:col-span-2 card p-5">
           <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
             Contests
           </h3>
@@ -145,7 +145,7 @@ export default function CompetitionsPage() {
           )}
         </div>
 
-        <div className="rounded-xl border border-zinc-200 bg-white/90 p-5 dark:border-zinc-800 dark:bg-zinc-900/80">
+        <div className="card p-5">
           <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
             Leaderboard
           </h3>

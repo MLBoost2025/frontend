@@ -75,7 +75,7 @@ export default function TracksPage() {
             return (
               <article
                 key={track.id}
-                className="rounded-xl border border-zinc-200 bg-white/90 p-5 dark:border-zinc-800 dark:bg-zinc-900/80"
+                className="card p-5"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div>

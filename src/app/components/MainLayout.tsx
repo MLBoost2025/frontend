@@ -34,7 +34,7 @@ export default function MainLayout({
   };
 
   return (
-    <div className="flex min-h-screen bg-zinc-100 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
+    <div className="flex min-h-screen text-zinc-900 dark:text-zinc-100">
       <Sidebar
         selectedCategory={selectedCategory}
         onCategoryChange={onCategoryChange}
@@ -45,7 +45,7 @@ export default function MainLayout({
       {!isSidebarOpen && (
         <button
           onClick={() => setIsSidebarOpen(true)}
-          className="fixed left-4 top-4 z-30 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-zinc-300 bg-white/90 text-zinc-700 shadow-sm backdrop-blur hover:bg-white dark:border-zinc-700 dark:bg-zinc-900/90 dark:text-zinc-200 dark:hover:bg-zinc-900"
+          className="fixed left-4 top-4 z-30 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-zinc-200/80 bg-white/80 text-zinc-700 shadow-sm backdrop-blur-xl hover:bg-white dark:border-white/10 dark:bg-white/[0.05] dark:text-zinc-200 dark:hover:bg-white/10"
           aria-label="Open sidebar"
         >
           <Menu className="h-5 w-5" />

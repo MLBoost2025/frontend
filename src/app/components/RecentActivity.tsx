@@ -18,7 +18,7 @@ function difficultyClasses(difficulty: RecentActivityItem["difficulty"]): string
 
 export default function RecentActivity({ activities }: RecentActivityProps) {
   return (
-    <section className="rounded-xl border border-zinc-200 bg-white/90 p-5 backdrop-blur dark:border-zinc-800 dark:bg-zinc-900/80">
+    <section className="card p-5">
       <div className="mb-4 flex items-center justify-between">
         <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
           Recent Activity
