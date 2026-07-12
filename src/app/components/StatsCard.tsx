@@ -31,7 +31,7 @@ export default function StatsCard({
       <div className="flex items-start justify-between gap-3">
         <p className="eyebrow">{title}</p>
         {Icon ? (
-          <span className={`flex h-8 w-8 items-center justify-center rounded-lg ${ACCENTS[accent]}`}>
+          <span className={`flex h-8 w-8 items-center justify-center rounded-xl ${ACCENTS[accent]}`}>
             <Icon className="h-4 w-4" />
           </span>
         ) : null}

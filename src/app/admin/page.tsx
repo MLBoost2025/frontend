@@ -247,14 +247,14 @@ export default function AdminPage() {
       {isLoading ? (
         <p className="text-sm text-zinc-500 dark:text-zinc-400">Loading…</p>
       ) : !isAdmin ? (
-        <div className="rounded-xl border border-zinc-200 bg-white/90 p-6 dark:border-zinc-800 dark:bg-zinc-900/80">
+        <div className="rounded-xl border border-black/[0.06] bg-white/90 p-6 dark:border-white/[0.06] dark:bg-zinc-900/80">
           <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">Admin access required</h2>
           <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
             This area is only available to administrators.
           </p>
         </div>
       ) : (
-        <div className="rounded-xl border border-zinc-200 bg-white/90 p-6 dark:border-zinc-800 dark:bg-zinc-900/80">
+        <div className="rounded-xl border border-black/[0.06] bg-white/90 p-6 dark:border-white/[0.06] dark:bg-zinc-900/80">
           <div className="mb-6 flex gap-2">
             {TABS.map((t) => (
               <button

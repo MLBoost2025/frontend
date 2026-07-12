@@ -154,7 +154,7 @@ export default function Sidebar({
 
         {/* Footer: upgrade / streak card */}
         <div className="p-3">
-          <div className="relative overflow-hidden rounded-xl border border-brand-500/20 bg-gradient-to-br from-brand-500/[0.08] to-accent-500/[0.06] p-3">
+          <div className="relative overflow-hidden rounded-2xl border border-brand-500/20 bg-gradient-to-br from-brand-500/[0.08] to-accent-500/[0.06] p-3">
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-brand-500" />
               <p className="text-xs font-semibold text-zinc-900 dark:text-white">

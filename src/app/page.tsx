@@ -59,7 +59,7 @@ export default function Home() {
       title="Dashboard"
       subtitle="Your daily machine learning practice command center"
     >
-      <section className="relative overflow-hidden rounded-2xl border border-white/[0.06] bg-[#0c0e13] px-7 py-8 text-white">
+      <section className="relative overflow-hidden rounded-3xl border border-white/[0.06] bg-[#0c0e13] px-7 py-8 text-white">
         {/* ambient glow + grid inside the hero */}
         <div
           className="pointer-events-none absolute inset-0"

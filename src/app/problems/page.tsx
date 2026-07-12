@@ -103,7 +103,7 @@ export default function ProblemsPage() {
 
   const headerSlot = (
     <section className="grid grid-cols-1 gap-3 md:grid-cols-3">
-      <article className="rounded-xl border border-zinc-200 bg-white/90 px-4 py-4 dark:border-zinc-800 dark:bg-zinc-900/80">
+      <article className="rounded-xl border border-black/[0.06] bg-white/90 px-4 py-4 dark:border-white/[0.06] dark:bg-zinc-900/80">
         <p className="text-xs uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
           Total Problems
         </p>
@@ -111,7 +111,7 @@ export default function ProblemsPage() {
           {problems.length}
         </p>
       </article>
-      <article className="rounded-xl border border-zinc-200 bg-white/90 px-4 py-4 dark:border-zinc-800 dark:bg-zinc-900/80">
+      <article className="rounded-xl border border-black/[0.06] bg-white/90 px-4 py-4 dark:border-white/[0.06] dark:bg-zinc-900/80">
         <p className="text-xs uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
           Solved
         </p>
@@ -119,7 +119,7 @@ export default function ProblemsPage() {
           {solvedCount}
         </p>
       </article>
-      <article className="rounded-xl border border-zinc-200 bg-white/90 px-4 py-4 dark:border-zinc-800 dark:bg-zinc-900/80">
+      <article className="rounded-xl border border-black/[0.06] bg-white/90 px-4 py-4 dark:border-white/[0.06] dark:bg-zinc-900/80">
         <p className="text-xs uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
           Medium Challenges
         </p>
@@ -141,7 +141,7 @@ export default function ProblemsPage() {
         setFilters((current) => ({ ...current, category }));
       }}
     >
-      <section className="rounded-xl border border-zinc-200 bg-white/90 p-4 dark:border-zinc-800 dark:bg-zinc-900/80">
+      <section className="rounded-xl border border-black/[0.06] bg-white/90 p-4 dark:border-white/[0.06] dark:bg-zinc-900/80">
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_auto_auto_auto]">
           <SearchBar
             inputId="problem-search"
@@ -202,7 +202,7 @@ export default function ProblemsPage() {
 
       <section>
         {isLoading ? (
-          <div className="rounded-xl border border-zinc-200 bg-white/90 p-12 text-center text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900/80 dark:text-zinc-300">
+          <div className="rounded-xl border border-black/[0.06] bg-white/90 p-12 text-center text-zinc-600 dark:border-white/[0.06] dark:bg-zinc-900/80 dark:text-zinc-300">
             Loading problems...
           </div>
         ) : (

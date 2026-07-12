@@ -60,7 +60,7 @@ export default function LearnPage() {
               {tracks.map((track) => (
                 <article
                   key={track.id}
-                  className="rounded-lg border border-zinc-200 px-4 py-3 dark:border-zinc-800"
+                  className="rounded-2xl bg-zinc-50/70 px-4 py-3 dark:bg-white/[0.025]"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div>
@@ -106,7 +106,7 @@ export default function LearnPage() {
               {suggested.map((lesson) => (
                 <li
                   key={lesson}
-                  className="rounded-md border border-zinc-200 px-3 py-2 dark:border-zinc-800"
+                  className="rounded-xl bg-zinc-50/70 px-3 py-2 dark:bg-white/[0.025]"
                 >
                   {lesson}
                 </li>

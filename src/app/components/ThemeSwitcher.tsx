@@ -80,7 +80,7 @@ export default function ThemeSwitcher({ compact = false }: ThemeSwitcherProps) {
       </button>
 
       {isOpen ? (
-        <div className="absolute right-0 z-40 mt-2 w-36 rounded-lg border border-zinc-200 bg-white p-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
+        <div className="absolute right-0 z-40 mt-2 w-36 rounded-lg border border-black/[0.06] bg-white p-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-900">
           {options.map((option) => (
             <button
               key={option}

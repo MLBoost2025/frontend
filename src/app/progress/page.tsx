@@ -52,7 +52,7 @@ export default function ProgressPage() {
               {weekly.map((item) => (
                 <div
                   key={item.date}
-                  className="rounded-md border border-zinc-200 px-2 py-3 text-center dark:border-zinc-800"
+                  className="rounded-xl bg-zinc-50/70 px-2 py-3 text-center dark:bg-white/[0.025]"
                 >
                   <p className="text-[11px] text-zinc-500 dark:text-zinc-400">{item.label}</p>
                   <p className="mt-2 text-lg font-semibold text-zinc-900 dark:text-zinc-100">

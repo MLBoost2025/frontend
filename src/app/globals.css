@@ -26,14 +26,12 @@
 
 :root {
   color-scheme: light;
-  --bg: #f5f6f8;
-  --grid: rgba(16, 24, 40, 0.03);
+  --bg: #f4f5f7;
 }
 
 .dark {
   color-scheme: dark;
   --bg: #0a0b0e;
-  --grid: rgba(255, 255, 255, 0.025);
 }
 
 * {
@@ -60,7 +58,7 @@ body {
   color: #e7e9ee;
 }
 
-/* Ambient, premium background: soft brand + accent glows over a faint grid. */
+/* Ambient background: soft, clean brand + accent glows. No grid — keep it calm. */
 body::before {
   content: "";
   position: fixed;
@@ -68,19 +66,14 @@ body::before {
   z-index: -1;
   pointer-events: none;
   background-image:
-    radial-gradient(1100px 620px at 108% -8%, rgba(244, 102, 31, 0.07), transparent 60%),
-    radial-gradient(900px 520px at -12% 112%, rgba(14, 165, 233, 0.05), transparent 60%),
-    linear-gradient(var(--grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
-  background-size: 100% 100%, 100% 100%, 44px 44px, 44px 44px;
+    radial-gradient(1100px 640px at 106% -12%, rgba(244, 102, 31, 0.06), transparent 62%),
+    radial-gradient(900px 540px at -12% 114%, rgba(14, 165, 233, 0.045), transparent 62%);
 }
 
 .dark body::before {
   background-image:
-    radial-gradient(1000px 600px at 108% -8%, rgba(244, 102, 31, 0.12), transparent 55%),
-    radial-gradient(820px 520px at -12% 112%, rgba(14, 165, 233, 0.07), transparent 55%),
-    linear-gradient(var(--grid) 1px, transparent 1px),
-    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+    radial-gradient(1000px 620px at 106% -12%, rgba(244, 102, 31, 0.10), transparent 58%),
+    radial-gradient(820px 540px at -12% 114%, rgba(14, 165, 233, 0.06), transparent 58%);
 }
 
 ::selection {
@@ -114,17 +107,18 @@ body::before {
 }
 
 @layer components {
-  /* The canonical surface used across the app. */
+  /* The canonical surface: soft, rounded, minimal border — depth from shadow. */
   .card {
-    @apply rounded-2xl border border-zinc-200/70 bg-white/80 backdrop-blur-sm
-      shadow-[0_1px_2px_rgba(16,24,40,0.04),0_4px_16px_-8px_rgba(16,24,40,0.10)]
-      dark:border-white/[0.06] dark:bg-white/[0.02] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03),0_10px_30px_-16px_rgba(0,0,0,0.6)];
+    @apply rounded-[22px] border border-black/[0.04] bg-white/85 backdrop-blur-sm
+      shadow-[0_1px_2px_rgba(16,24,40,0.03),0_10px_28px_-18px_rgba(16,24,40,0.18)]
+      dark:border-white/[0.05] dark:bg-white/[0.025]
+      dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.02),0_16px_40px_-24px_rgba(0,0,0,0.7)];
   }
 
   .card-hover {
     @apply transition duration-200 hover:-translate-y-0.5
-      hover:border-zinc-300/80 hover:shadow-[0_8px_30px_-12px_rgba(16,24,40,0.18)]
-      dark:hover:border-white/[0.12];
+      hover:shadow-[0_16px_40px_-18px_rgba(16,24,40,0.22)]
+      dark:hover:border-white/[0.09];
   }
 
   /* Small uppercase eyebrow used on card headers. */
@@ -138,8 +132,8 @@ body::before {
   }
 
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-1.5 rounded-lg bg-brand-500 px-4 py-2
-      text-sm font-semibold text-white shadow-sm transition
+    @apply inline-flex items-center justify-center gap-1.5 rounded-full bg-brand-500 px-5 py-2.5
+      text-sm font-semibold text-white shadow-[0_6px_18px_-6px_rgba(244,102,31,0.6)] transition
       hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-50;
   }
 }

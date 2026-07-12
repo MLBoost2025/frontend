@@ -77,7 +77,7 @@ export default function ProblemsTable({
                     {problem.tags.slice(0, 3).map((tag) => (
                       <span
                         key={`${problem.id}-${tag}`}
-                        className="rounded-md bg-zinc-100 px-2 py-0.5 text-[11px] font-medium text-zinc-500 dark:bg-white/[0.05] dark:text-zinc-400"
+                        className="rounded-lg bg-zinc-100 px-2 py-0.5 text-[11px] font-medium text-zinc-500 dark:bg-white/[0.05] dark:text-zinc-400"
                       >
                         {tag}
                       </span>

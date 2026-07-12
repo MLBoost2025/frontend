@@ -38,7 +38,7 @@ export default function RecentActivity({ activities }: RecentActivityProps) {
         {activities.map((activity) => (
           <article
             key={activity.id}
-            className="rounded-lg border border-zinc-200 px-4 py-3 dark:border-zinc-800"
+            className="rounded-2xl bg-zinc-50/70 px-4 py-3 dark:bg-white/[0.025]"
           >
             <div className="flex items-start justify-between gap-4">
               <div>

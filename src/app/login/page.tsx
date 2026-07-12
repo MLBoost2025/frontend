@@ -95,10 +95,10 @@ function LoginForm() {
           </p>
         </div>
 
-        <div className="mb-6 grid grid-cols-2 rounded-lg border border-zinc-200 bg-zinc-100/70 p-1 dark:border-white/[0.06] dark:bg-white/[0.03]">
+        <div className="mb-6 grid grid-cols-2 rounded-xl border border-black/[0.06] bg-zinc-100/70 p-1 dark:border-white/[0.06] dark:bg-white/[0.03]">
           <button
             type="button"
-            className={`rounded-md px-3 py-2 text-sm font-medium transition ${
+            className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
               mode === "login"
                 ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-700 dark:text-zinc-100"
                 : "text-zinc-600 hover:text-zinc-800 dark:text-zinc-300 dark:hover:text-zinc-100"
@@ -109,7 +109,7 @@ function LoginForm() {
           </button>
           <button
             type="button"
-            className={`rounded-md px-3 py-2 text-sm font-medium transition ${
+            className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
               mode === "signup"
                 ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-700 dark:text-zinc-100"
                 : "text-zinc-600 hover:text-zinc-800 dark:text-zinc-300 dark:hover:text-zinc-100"
@@ -131,7 +131,7 @@ function LoginForm() {
                 type="text"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none ring-brand-500/40 transition placeholder:text-zinc-400 focus:border-brand-500/50 focus:ring-2 dark:border-white/10 dark:bg-white/[0.03] dark:text-zinc-100"
+                className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none ring-brand-500/40 transition placeholder:text-zinc-400 focus:border-brand-500/50 focus:ring-2 dark:border-white/10 dark:bg-white/[0.03] dark:text-zinc-100"
                 placeholder="Ada Lovelace"
               />
             </label>
@@ -146,7 +146,7 @@ function LoginForm() {
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none ring-brand-500/40 transition placeholder:text-zinc-400 focus:border-brand-500/50 focus:ring-2 dark:border-white/10 dark:bg-white/[0.03] dark:text-zinc-100"
+              className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none ring-brand-500/40 transition placeholder:text-zinc-400 focus:border-brand-500/50 focus:ring-2 dark:border-white/10 dark:bg-white/[0.03] dark:text-zinc-100"
               placeholder="you@example.com"
             />
           </label>
@@ -160,13 +160,13 @@ function LoginForm() {
               type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none ring-brand-500/40 transition placeholder:text-zinc-400 focus:border-brand-500/50 focus:ring-2 dark:border-white/10 dark:bg-white/[0.03] dark:text-zinc-100"
+              className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none ring-brand-500/40 transition placeholder:text-zinc-400 focus:border-brand-500/50 focus:ring-2 dark:border-white/10 dark:bg-white/[0.03] dark:text-zinc-100"
               placeholder="••••••••"
             />
           </label>
 
           {errorMessage && (
-            <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
+            <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
               {errorMessage}
             </p>
           )}

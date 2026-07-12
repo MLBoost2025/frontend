@@ -68,7 +68,7 @@ export default function Navbar({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search problems…"
-            className="h-9 w-56 rounded-lg border border-zinc-200/80 bg-zinc-100/60 pl-9 pr-3 text-sm text-zinc-800 outline-none transition placeholder:text-zinc-400 focus:w-72 focus:border-brand-500/50 focus:bg-white dark:border-white/[0.06] dark:bg-white/[0.03] dark:text-zinc-100 dark:focus:bg-white/[0.06]"
+            className="h-9 w-56 rounded-full border border-zinc-200/80 bg-zinc-100/60 pl-9 pr-3 text-sm text-zinc-800 outline-none transition placeholder:text-zinc-400 focus:w-72 focus:border-brand-500/50 focus:bg-white dark:border-white/[0.06] dark:bg-white/[0.03] dark:text-zinc-100 dark:focus:bg-white/[0.06]"
           />
         </div>
       </form>
@@ -95,7 +95,7 @@ export default function Navbar({
 
         <button
           onClick={handleLogout}
-          className="rounded-lg border border-zinc-200/80 px-3 py-1.5 text-xs font-medium text-zinc-600 transition hover:bg-zinc-100 hover:text-zinc-900 dark:border-white/[0.08] dark:text-zinc-300 dark:hover:bg-white/[0.05] dark:hover:text-white"
+          className="rounded-full border border-zinc-200/80 px-3 py-1.5 text-xs font-medium text-zinc-600 transition hover:bg-zinc-100 hover:text-zinc-900 dark:border-white/[0.08] dark:text-zinc-300 dark:hover:bg-white/[0.05] dark:hover:text-white"
         >
           Logout
         </button>
