@@ -60,6 +60,30 @@ export interface User {
   email: string;
   avatarUrl?: string;
   createdAt: string;
+  roles?: string[];
+}
+
+export interface NewProblemInput {
+  title: string;
+  description: string;
+  difficulty: Difficulty;
+  tags: string[];
+  starterCode?: string;
+  constraints?: string[];
+}
+
+export interface NewContestInput {
+  title: string;
+  description?: string;
+  startTime: string;
+  endTime: string;
+}
+
+export interface NewLearningTrackInput {
+  title: string;
+  description?: string;
+  tags: string[];
+  lessons: string[];
 }
 
 export interface AuthSession {

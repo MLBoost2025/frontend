@@ -8,10 +8,12 @@ import {
   BookOpen,
   Code2,
   Home,
+  ShieldCheck,
   Trophy,
   UserCircle2,
   X,
 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 interface SidebarProps {
   selectedCategory?: string;
@@ -45,6 +47,11 @@ export default function Sidebar({
 }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { isAdmin } = useAuth();
+
+  const navItems = isAdmin
+    ? [...NAV_ITEMS, { label: "Admin", href: "/admin", icon: ShieldCheck }]
+    : NAV_ITEMS;
 
   const handleTopicClick = (category: string) => {
     onCategoryChange?.(category);
@@ -84,7 +91,7 @@ export default function Sidebar({
 
         <nav className="px-3 py-4">
           <div className="space-y-1">
-            {NAV_ITEMS.map((item) => {
+            {navItems.map((item) => {
               const isProblemsChild =
                 item.href === "/problems" && pathname.startsWith("/problems/");
               const isActive = pathname === item.href || isProblemsChild;

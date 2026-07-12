@@ -9,6 +9,9 @@ import {
   LeaderboardEntry,
   LearningTrack,
   LoginPayload,
+  NewContestInput,
+  NewLearningTrackInput,
+  NewProblemInput,
   Problem,
   ProblemDetail,
   SignupPayload,
@@ -539,6 +542,7 @@ function createMockSession(name: string, email: string): AuthSession {
       email: email.toLowerCase(),
       avatarUrl: "",
       createdAt: now.toISOString(),
+      roles: ["User"],
     },
     accessToken: token,
     expiresAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(),
@@ -951,7 +955,7 @@ function toAuthSessionFromLive(
     token?: string;
     accessToken?: string;
     expiresAt?: string;
-    user?: Partial<AuthSession["user"]>;
+    user?: Partial<AuthSession["user"]> & { username?: string };
   };
 
   const token = parsed.accessToken || parsed.token || `live_${Date.now()}`;
@@ -960,10 +964,11 @@ function toAuthSessionFromLive(
   return {
     user: {
       id: parsed.user?.id || `user_${fallbackEmail.replace(/[^a-z0-9]/gi, "")}`,
-      name: parsed.user?.name || fallbackName,
+      name: parsed.user?.name || parsed.user?.username || fallbackName,
       email: parsed.user?.email || fallbackEmail,
       avatarUrl: parsed.user?.avatarUrl || "",
       createdAt: parsed.user?.createdAt || now.toISOString(),
+      roles: parsed.user?.roles || ["User"],
     },
     accessToken: token,
     expiresAt:
@@ -1881,6 +1886,58 @@ export async function fetchLearningTracks(): Promise<LearningTrack[]> {
     "fetch_learning_tracks",
     () => liveFetchLearningTracks(),
     () => mockFetchLearningTracks()
+  );
+}
+
+// --- Admin authoring ------------------------------------------------------
+// These POST to the backend in live mode (the bearer token is attached by
+// fetchWithRetry). In mock mode they simulate success, since there is no local
+// persistence store for authored content.
+
+export async function createProblem(input: NewProblemInput): Promise<{ slug?: string }> {
+  return runWithBackendSwitch(
+    "create_problem",
+    () =>
+      fetchWithRetry<{ slug?: string }>("/problems", {
+        method: "POST",
+        body: JSON.stringify(input),
+      }),
+    async () => {
+      await wait(200);
+      return { slug: `${input.title.toLowerCase().replace(/[^\w]+/g, "-")}` };
+    }
+  );
+}
+
+export async function createContest(input: NewContestInput): Promise<{ _id?: string }> {
+  return runWithBackendSwitch(
+    "create_contest",
+    () =>
+      fetchWithRetry<{ _id?: string }>("/contests", {
+        method: "POST",
+        body: JSON.stringify(input),
+      }),
+    async () => {
+      await wait(200);
+      return { _id: `mock-${Date.now()}` };
+    }
+  );
+}
+
+export async function createLearningTrack(
+  input: NewLearningTrackInput
+): Promise<{ slug?: string }> {
+  return runWithBackendSwitch(
+    "create_learning_track",
+    () =>
+      fetchWithRetry<{ slug?: string }>("/learn/tracks", {
+        method: "POST",
+        body: JSON.stringify(input),
+      }),
+    async () => {
+      await wait(200);
+      return { slug: `${input.title.toLowerCase().replace(/[^\w]+/g, "-")}` };
+    }
   );
 }
 
