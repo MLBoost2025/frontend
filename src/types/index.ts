@@ -248,6 +248,26 @@ export interface Competition {
   status: CompetitionStatus;
 }
 
+export interface ContestProblem {
+  id: string;
+  slug: string;
+  title: string;
+  difficulty: Difficulty;
+}
+
+export interface CompetitionDetail extends Competition {
+  problems: ContestProblem[];
+}
+
+export interface ContestLeaderboardEntry {
+  rank: number;
+  userId: string;
+  username: string;
+  score: number;
+  problemsSolved: number;
+  lastSubmissionTime?: string;
+}
+
 export interface RecentActivityItem {
   id: string;
   title: string;

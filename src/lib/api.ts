@@ -2,8 +2,10 @@ import {
   AuthSession,
   CompanyTrack,
   Competition,
+  CompetitionDetail,
   CompetitionStatus,
   ContestRank,
+  ContestLeaderboardEntry,
   Difficulty,
   ExecutionMode,
   LeaderboardEntry,
@@ -1646,6 +1648,7 @@ interface LiveContest {
   endTime?: string;
   participantCount?: number;
   problemCount?: number;
+  problems?: Array<{ _id?: string; id?: string; slug?: string; title?: string; difficulty?: Difficulty }>;
 }
 
 function toCompetitionFromLive(raw: LiveContest): Competition {
@@ -1718,6 +1721,59 @@ export async function fetchCompetitions(): Promise<Competition[]> {
     "fetch_competitions",
     () => liveFetchCompetitions(),
     () => mockFetchCompetitions()
+  );
+}
+
+export async function fetchCompetitionById(id: string): Promise<CompetitionDetail> {
+  return runWithBackendSwitch(
+    "fetch_competition_detail",
+    async () => {
+      const raw = await fetchWithRetry<LiveContest>(`/contests/${id}`, { method: "GET" });
+      return {
+        ...toCompetitionFromLive({ ...raw, problemCount: raw.problems?.length ?? raw.problemCount }),
+        problems: (raw.problems ?? []).map((problem) => ({
+          id: problem._id || problem.id || "",
+          slug: problem.slug || "",
+          title: problem.title || "Untitled Problem",
+          difficulty: toDifficulty(problem.difficulty),
+        })),
+      };
+    },
+    async () => {
+      const competition = (await mockFetchCompetitions()).find((item) => item.id === id);
+      if (!competition) throw new Error("Contest not found.");
+      return {
+        ...competition,
+        problems: MOCK_PROBLEMS.slice(0, Math.min(competition.problemCount, 3)).map((problem) => ({
+          id: problem.id,
+          slug: problem.slug,
+          title: problem.title,
+          difficulty: problem.difficulty,
+        })),
+      };
+    }
+  );
+}
+
+export async function fetchContestLeaderboard(id: string): Promise<ContestLeaderboardEntry[]> {
+  return runWithBackendSwitch(
+    "fetch_contest_leaderboard",
+    () => fetchWithRetry<ContestLeaderboardEntry[]>(`/contests/${id}/leaderboard`, { method: "GET" }),
+    async () => MOCK_LEADERBOARD.slice(0, 5).map((entry) => ({
+      rank: entry.rank,
+      userId: entry.userId,
+      username: entry.username,
+      score: entry.solved,
+      problemsSolved: Math.min(entry.solved, 5),
+    }))
+  );
+}
+
+export async function registerForContest(id: string): Promise<void> {
+  return runWithBackendSwitch(
+    "register_for_contest",
+    () => fetchWithRetry<void>(`/contests/${id}/register`, { method: "POST" }),
+    () => wait(250)
   );
 }
 

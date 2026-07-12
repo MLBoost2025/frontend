@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import MainLayout from "../components/MainLayout";
 import { fetchCompetitions, fetchLeaderboard } from "@/lib/api";
 import { Competition, LeaderboardEntry } from "@/types";
+import Link from "next/link";
 
 function StatusBadge({ status }: { status: Competition["status"] }) {
   const styles =
@@ -115,9 +116,10 @@ export default function CompetitionsPage() {
           ) : (
             <div className="space-y-3">
               {competitions.map((contest) => (
-                <article
+                <Link
                   key={contest.id}
-                  className="grid gap-3 rounded-2xl bg-zinc-50/70 px-4 py-3 dark:bg-white/[0.025] md:grid-cols-[1fr_auto_auto_auto] md:items-center"
+                  href={`/competitions/${contest.id}`}
+                  className="grid gap-3 rounded-2xl bg-zinc-50/70 px-4 py-3 transition hover:bg-brand-50/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 dark:bg-white/[0.025] dark:hover:bg-brand-500/[0.08] md:grid-cols-[1fr_auto_auto_auto] md:items-center"
                 >
                   <div>
                     <div className="flex items-center gap-2">
@@ -139,7 +141,7 @@ export default function CompetitionsPage() {
                   <p className="text-xs font-medium text-orange-600 dark:text-orange-300">
                     {contest.problemCount} problems
                   </p>
-                </article>
+                </Link>
               ))}
             </div>
           )}
