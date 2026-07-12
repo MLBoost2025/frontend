@@ -1878,6 +1878,7 @@ async function liveFetchLearningTracks(): Promise<LearningTrack[]> {
     tags: track.tags ?? [],
     lessons: track.lessons ?? [],
     lessonCount: track.lessonCount ?? (track.lessons ?? []).length,
+    order: track.order ?? 0,
   }));
 }
 
@@ -1938,6 +1939,75 @@ export async function createLearningTrack(
       await wait(200);
       return { slug: `${input.title.toLowerCase().replace(/[^\w]+/g, "-")}` };
     }
+  );
+}
+
+export async function updateProblem(
+  id: string,
+  input: NewProblemInput
+): Promise<{ slug?: string }> {
+  return runWithBackendSwitch(
+    "update_problem",
+    () =>
+      fetchWithRetry<{ slug?: string }>(`/problems/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(input),
+      }),
+    async () => {
+      await wait(200);
+      return {};
+    }
+  );
+}
+
+export async function deleteProblem(id: string): Promise<void> {
+  return runWithBackendSwitch(
+    "delete_problem",
+    () => fetchWithRetry<void>(`/problems/${id}`, { method: "DELETE" }),
+    () => wait(200)
+  );
+}
+
+export async function updateContest(id: string, input: NewContestInput): Promise<void> {
+  return runWithBackendSwitch(
+    "update_contest",
+    () =>
+      fetchWithRetry<void>(`/contests/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(input),
+      }),
+    () => wait(200)
+  );
+}
+
+export async function deleteContest(id: string): Promise<void> {
+  return runWithBackendSwitch(
+    "delete_contest",
+    () => fetchWithRetry<void>(`/contests/${id}`, { method: "DELETE" }),
+    () => wait(200)
+  );
+}
+
+export async function updateLearningTrack(
+  id: string,
+  input: NewLearningTrackInput
+): Promise<void> {
+  return runWithBackendSwitch(
+    "update_learning_track",
+    () =>
+      fetchWithRetry<void>(`/learn/tracks/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(input),
+      }),
+    () => wait(200)
+  );
+}
+
+export async function deleteLearningTrack(id: string): Promise<void> {
+  return runWithBackendSwitch(
+    "delete_learning_track",
+    () => fetchWithRetry<void>(`/learn/tracks/${id}`, { method: "DELETE" }),
+    () => wait(200)
   );
 }
 

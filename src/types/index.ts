@@ -84,6 +84,7 @@ export interface NewLearningTrackInput {
   description?: string;
   tags: string[];
   lessons: string[];
+  order?: number;
 }
 
 export interface AuthSession {
@@ -231,6 +232,7 @@ export interface LearningTrack {
   tags: string[];
   lessons: string[];
   lessonCount: number;
+  order?: number;
 }
 
 export type CompetitionStatus = "upcoming" | "live" | "ended";
