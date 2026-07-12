@@ -340,11 +340,11 @@ export default function AdminPage() {
       ) : (
         <div className="card p-5 sm:p-7">
           <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex w-fit rounded-full bg-zinc-100 p-1 dark:bg-white/[0.05]" aria-label="Content type">
-              {TYPES.map((item) => <button key={item.key} type="button" onClick={() => setType(item.key)} className={`rounded-full px-3.5 py-2 text-sm font-semibold transition ${type === item.key ? "bg-white text-zinc-900 shadow-sm dark:bg-white/[0.12] dark:text-white" : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"}`}>{item.label}</button>)}
+            <div role="group" className="flex w-fit rounded-full bg-zinc-100 p-1 dark:bg-white/[0.05]" aria-label="Content type">
+              {TYPES.map((item) => <button key={item.key} type="button" aria-pressed={type === item.key} onClick={() => setType(item.key)} className={`rounded-full px-3.5 py-2 text-sm font-semibold transition ${type === item.key ? "bg-white text-zinc-900 shadow-sm dark:bg-white/[0.12] dark:text-white" : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"}`}>{item.label}</button>)}
             </div>
-            <div className="flex w-fit rounded-full bg-zinc-100 p-1 dark:bg-white/[0.05]" aria-label="Admin mode">
-              {(["create", "manage"] as Mode[]).map((item) => <button key={item} type="button" onClick={() => setMode(item)} className={`rounded-full px-3.5 py-2 text-sm font-semibold capitalize transition ${mode === item ? "bg-brand-500 text-white shadow-sm" : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"}`}>{item}</button>)}
+            <div role="group" className="flex w-fit rounded-full bg-zinc-100 p-1 dark:bg-white/[0.05]" aria-label="Admin mode">
+              {(["create", "manage"] as Mode[]).map((item) => <button key={item} type="button" aria-pressed={mode === item} onClick={() => setMode(item)} className={`rounded-full px-3.5 py-2 text-sm font-semibold capitalize transition ${mode === item ? "bg-brand-500 text-white shadow-sm" : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"}`}>{item}</button>)}
             </div>
           </div>
           <div className="max-w-3xl">

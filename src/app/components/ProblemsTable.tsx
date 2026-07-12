@@ -42,7 +42,53 @@ export default function ProblemsTable({
 
   return (
     <div className="card overflow-hidden">
-      <div className="overflow-x-auto">
+      <div className="divide-y divide-zinc-100 md:hidden dark:divide-white/[0.04]">
+        {problems.map((problem) => (
+          <article key={problem.id} className="p-4">
+            <button
+              type="button"
+              onClick={() => onProblemClick?.(problem.id)}
+              disabled={!onProblemClick}
+              className="w-full text-left"
+              aria-label={`Open ${problem.title}`}
+            >
+              <div className="flex items-start gap-3">
+                <span className="mt-0.5 shrink-0" aria-hidden="true">
+                  {statusIcon(problem.status)}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="sr-only">{problem.status} status. </span>
+                  <span className="block text-sm font-semibold text-zinc-800 transition-colors hover:text-brand-600 dark:text-zinc-100 dark:hover:text-brand-400">
+                    {problem.title}
+                  </span>
+                  <span className="mt-2 flex flex-wrap gap-1.5">
+                    {problem.tags.slice(0, 3).map((tag) => (
+                      <span
+                        key={`${problem.id}-${tag}`}
+                        className="rounded-lg bg-zinc-100 px-2 py-0.5 text-[11px] font-medium text-zinc-500 dark:bg-white/[0.05] dark:text-zinc-400"
+                      >
+                        {tag}
+                      </span>
+                    ))}
+                  </span>
+                </span>
+                <span
+                  className={`shrink-0 rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset ${difficultyPill(
+                    problem.difficulty
+                  )}`}
+                >
+                  {problem.difficulty}
+                </span>
+              </div>
+              <span className="mt-3 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                {problem.acceptanceRate}% acceptance
+              </span>
+            </button>
+          </article>
+        ))}
+      </div>
+
+      <div className="hidden overflow-x-auto md:block">
         <table className="w-full min-w-[760px] border-collapse">
           <thead>
             <tr className="border-b border-zinc-200/70 text-left text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">
@@ -57,20 +103,28 @@ export default function ProblemsTable({
             {problems.map((problem, index) => (
               <tr
                 key={problem.id}
-                onClick={() => onProblemClick?.(problem.id)}
-                className={`group cursor-pointer text-sm transition-colors hover:bg-brand-500/[0.04] dark:hover:bg-white/[0.03] ${
+                className={`group text-sm transition-colors hover:bg-brand-500/[0.04] dark:hover:bg-white/[0.03] ${
                   index !== problems.length - 1
                     ? "border-b border-zinc-100 dark:border-white/[0.04]"
                     : ""
                 }`}
               >
                 <td className="px-5 py-3.5">
-                  <div className="flex justify-center">{statusIcon(problem.status)}</div>
+                  <div className="flex justify-center">
+                    <span className="sr-only">{problem.status} status</span>
+                    <span aria-hidden="true">{statusIcon(problem.status)}</span>
+                  </div>
                 </td>
                 <td className="px-2 py-3.5">
-                  <p className="font-medium text-zinc-800 transition-colors group-hover:text-brand-600 dark:text-zinc-100 dark:group-hover:text-brand-400">
+                  <button
+                    type="button"
+                    onClick={() => onProblemClick?.(problem.id)}
+                    disabled={!onProblemClick}
+                    className="rounded-sm text-left font-medium text-zinc-800 transition-colors hover:text-brand-600 dark:text-zinc-100 dark:hover:text-brand-400"
+                    aria-label={`Open ${problem.title}`}
+                  >
                     {problem.title}
-                  </p>
+                  </button>
                 </td>
                 <td className="px-2 py-3.5">
                   <div className="flex flex-wrap gap-1.5">

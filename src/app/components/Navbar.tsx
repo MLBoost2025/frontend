@@ -44,8 +44,9 @@ export default function Navbar({
 
   return (
     <nav
-      className={`fixed top-0 right-0 z-10 flex h-16 items-center gap-4 border-b border-zinc-200/70 bg-white/70 px-5 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#0b0c10]/70 ${
-        isSidebarOpen ? "left-60" : "left-0"
+      aria-label="Page header"
+      className={`fixed top-0 right-0 z-10 flex h-16 items-center gap-4 border-b border-zinc-200/70 bg-white/70 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#0b0c10]/70 ${
+        isSidebarOpen ? "left-0 px-5 lg:left-60" : "left-0 pl-16 pr-5 lg:px-5"
       }`}
     >
       <div className="min-w-0 flex-1">
@@ -68,6 +69,7 @@ export default function Navbar({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search problems…"
+            aria-label="Search problems"
             className="h-9 w-56 rounded-full border border-zinc-200/80 bg-zinc-100/60 pl-9 pr-3 text-sm text-zinc-800 outline-none transition placeholder:text-zinc-400 focus:w-72 focus:border-brand-500/50 focus:bg-white dark:border-white/[0.06] dark:bg-white/[0.03] dark:text-zinc-100 dark:focus:bg-white/[0.06]"
           />
         </div>
@@ -82,6 +84,7 @@ export default function Navbar({
           <div
             className="relative flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-brand-600 bg-cover bg-center text-xs font-bold text-white"
             style={user?.avatarUrl ? { backgroundImage: `url(${user.avatarUrl})` } : undefined}
+            role="img"
             aria-label={`${user?.name || "User"} avatar`}
           >
             {user?.avatarUrl ? null : avatarInitial}

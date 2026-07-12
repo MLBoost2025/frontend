@@ -34,7 +34,9 @@ test("problem arena route opens from problems list", async ({ page }) => {
   await page.getByRole("button", { name: "Sign in" }).click();
 
   await page.getByRole("link", { name: "Problems" }).click();
-  await page.getByText("KNN Classifier on Iris", { exact: false }).first().click();
+  await page
+    .getByRole("button", { name: "Open KNN Classifier on Iris" })
+    .click();
 
   await expect(page).toHaveURL(/\/problems\/knn-classifier-iris/);
   await expect(

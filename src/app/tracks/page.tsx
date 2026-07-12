@@ -112,7 +112,14 @@ export default function TracksPage() {
                     </span>
                     <span>{progress}%</span>
                   </div>
-                  <div className="h-2 rounded-full bg-zinc-200 dark:bg-zinc-800">
+                  <div
+                    role="progressbar"
+                    aria-label={`${track.title} progress`}
+                    aria-valuemin={0}
+                    aria-valuemax={track.totalProblems}
+                    aria-valuenow={track.solvedProblems}
+                    className="h-2 rounded-full bg-zinc-200 dark:bg-zinc-800"
+                  >
                     <div className="h-2 rounded-full bg-orange-500" style={{ width: `${progress}%` }} />
                   </div>
                 </div>

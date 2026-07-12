@@ -95,6 +95,7 @@ export default function ProfilePage() {
                 <div
                   className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-brand-600 bg-cover bg-center text-xl font-bold text-white shadow-lg shadow-brand-500/20"
                   style={profile.user.avatarUrl ? { backgroundImage: `url(${profile.user.avatarUrl})` } : undefined}
+                  role="img"
                   aria-label={`${profile.user.name} avatar`}
                 >
                   {profile.user.avatarUrl ? null : profile.user.name.trim().charAt(0).toUpperCase()}
@@ -159,6 +160,8 @@ export default function ProfilePage() {
                       <div
                         key={cell.date}
                         title={`${cell.date}: ${cell.count} submissions`}
+                        role="img"
+                        aria-label={`${cell.date}: ${cell.count} submissions`}
                         className={`h-3 w-3 rounded-[2px] ${heatLevelClass(cell.count)}`}
                       />
                     ))}
@@ -182,7 +185,14 @@ export default function ProfilePage() {
                         <span className="text-zinc-800 dark:text-zinc-200">{topic.topic}</span>
                         <span className="text-zinc-500 dark:text-zinc-400">{topic.solved}/{topic.total}</span>
                       </div>
-                      <div className="h-2 rounded-full bg-zinc-200 dark:bg-zinc-800">
+                      <div
+                        role="progressbar"
+                        aria-label={`${topic.topic} progress`}
+                        aria-valuemin={0}
+                        aria-valuemax={topic.total}
+                        aria-valuenow={topic.solved}
+                        className="h-2 rounded-full bg-zinc-200 dark:bg-zinc-800"
+                      >
                         <div className="h-2 rounded-full bg-orange-500" style={{ width: `${pct}%` }} />
                       </div>
                     </div>
@@ -198,7 +208,11 @@ export default function ProfilePage() {
               <div className="grid grid-cols-6 gap-2">
                 {profile.acceptanceTrend.map((point) => (
                   <div key={point.label} className="flex flex-col items-center gap-1">
-                    <div className="flex h-28 w-full items-end rounded bg-zinc-200/70 px-1 dark:bg-zinc-800">
+                    <div
+                      role="img"
+                      aria-label={`${point.label}: ${point.acceptance}% acceptance`}
+                      className="flex h-28 w-full items-end rounded bg-zinc-200/70 px-1 dark:bg-zinc-800"
+                    >
                       <div
                         className="w-full rounded-t bg-emerald-500"
                         style={{ height: `${Math.min(100, point.acceptance)}%` }}

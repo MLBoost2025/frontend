@@ -174,6 +174,7 @@ export default function ProblemsPage() {
           />
 
           <select
+            aria-label="Difficulty"
             value={filters.level}
             onChange={(event) =>
               setFilters((current) => ({ ...current, level: event.target.value }))
@@ -187,6 +188,7 @@ export default function ProblemsPage() {
           </select>
 
           <select
+            aria-label="Category"
             value={filters.category}
             onChange={(event) =>
               setFilters((current) => ({
@@ -203,6 +205,7 @@ export default function ProblemsPage() {
           </select>
 
           <select
+            aria-label="Completion status"
             value={filters.statusFilter}
             onChange={(event) =>
               setFilters((current) => ({

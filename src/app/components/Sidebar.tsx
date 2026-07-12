@@ -61,11 +61,18 @@ export default function Sidebar({
       url.searchParams.set("category", category);
     }
     router.push(`${url.pathname}${url.search}`);
+    if (window.matchMedia("(max-width: 1023px)").matches) {
+      onClose?.();
+    }
   };
 
   return (
     <>
       <aside
+        id="primary-sidebar"
+        aria-label="Primary navigation"
+        aria-hidden={!isOpen}
+        inert={!isOpen || undefined}
         className={`fixed left-0 top-0 z-20 flex h-screen w-60 flex-col border-r border-zinc-200/70 bg-white/70 backdrop-blur-xl transition-transform duration-300 dark:border-white/[0.06] dark:bg-[#0b0c10]/80 ${
           isOpen ? "translate-x-0" : "-translate-x-60"
         }`}
@@ -98,7 +105,7 @@ export default function Sidebar({
         </div>
 
         {/* Primary nav */}
-        <nav className="flex-1 overflow-y-auto px-3 py-2">
+        <nav className="flex-1 overflow-y-auto px-3 py-2" aria-label="Main navigation">
           <div className="space-y-0.5">
             {navItems.map((item) => {
               const isProblemsChild =
@@ -110,6 +117,7 @@ export default function Sidebar({
                 <Link
                   key={item.href}
                   href={item.href}
+                  aria-current={isActive ? "page" : undefined}
                   className={`group relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition ${
                     isActive
                       ? "bg-brand-500/[0.10] text-brand-700 dark:bg-brand-500/[0.14] dark:text-brand-300"
@@ -134,7 +142,7 @@ export default function Sidebar({
 
           <div className="mt-6">
             <p className="eyebrow mb-2 px-3">Topics</p>
-            <div className="space-y-0.5">
+            <div className="space-y-0.5" aria-label="Problem categories">
               {CATEGORIES.map((category) => (
                 <button
                   key={category}
@@ -169,9 +177,11 @@ export default function Sidebar({
       </aside>
 
       {isOpen ? (
-        <div
-          className="fixed inset-0 z-10 bg-black/50 lg:hidden"
+        <button
+          type="button"
+          className="fixed inset-0 z-[15] bg-black/50 lg:hidden"
           onClick={onClose}
+          aria-label="Dismiss navigation"
         />
       ) : null}
     </>

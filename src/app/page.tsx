@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, CircleCheckBig, Flame, ListChecks, Target } from "lucide-react";
+import { ArrowRight, CircleCheckBig, Flame, ListChecks, Loader2, Target } from "lucide-react";
 import MainLayout from "./components/MainLayout";
+import Landing from "./components/Landing";
 import StatsCard from "./components/StatsCard";
 import RecentActivity from "./components/RecentActivity";
 import WeeklyGoals from "./components/WeeklyGoals";
 import { fetchRecentActivity, fetchUserStats } from "@/lib/api";
+import { useAuth } from "@/context/AuthContext";
 import { RecentActivityItem, UserStats } from "@/types";
 
 function acceptanceRate(stats: UserStats): string {
@@ -15,7 +17,23 @@ function acceptanceRate(stats: UserStats): string {
   return `${Math.round((stats.acceptedSubmissions / stats.totalSubmissions) * 100)}%`;
 }
 
+// The root route is public: logged-out visitors see the marketing landing,
+// authenticated users get their dashboard.
 export default function Home() {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div role="status" aria-label="Loading your session" className="flex min-h-screen items-center justify-center text-zinc-400">
+        <Loader2 className="h-5 w-5 animate-spin text-brand-500" />
+      </div>
+    );
+  }
+
+  return isAuthenticated ? <DashboardHome /> : <Landing />;
+}
+
+function DashboardHome() {
   const [stats, setStats] = useState<UserStats | null>(null);
   const [activities, setActivities] = useState<RecentActivityItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);

@@ -1,9 +1,11 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 import ProblemsTable from "./ProblemsTable";
 
 describe("ProblemsTable", () => {
-  it("opens the selected problem", () => {
+  it("opens the selected problem from the keyboard", async () => {
+    const user = userEvent.setup();
     const onProblemClick = vi.fn();
 
     render(
@@ -24,7 +26,11 @@ describe("ProblemsTable", () => {
       />
     );
 
-    fireEvent.click(screen.getByText("KNN Classifier on Iris"));
+    const [openButton] = screen.getAllByRole("button", {
+      name: "Open KNN Classifier on Iris",
+    });
+    openButton.focus();
+    await user.keyboard("{Enter}");
 
     expect(onProblemClick).toHaveBeenCalledWith("problem-1");
   });

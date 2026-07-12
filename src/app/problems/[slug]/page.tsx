@@ -80,7 +80,9 @@ function SegButton({
 }) {
   return (
     <button
+      type="button"
       onClick={onClick}
+      aria-pressed={active}
       className={`rounded-full px-3 py-1 text-xs font-medium transition ${
         active
           ? "bg-white text-zinc-900 shadow-sm dark:bg-white/10 dark:text-white"
@@ -108,7 +110,7 @@ function ResultView({ result }: { result: SubmissionResult | null }) {
   const positive = result.status === "Accepted";
 
   return (
-    <div className="h-full overflow-y-auto p-4 text-sm">
+    <div className="h-full overflow-y-auto p-4 text-sm" aria-live="polite">
       <div
         className={`mb-4 rounded-xl px-4 py-3 ${
           positive

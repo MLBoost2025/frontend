@@ -101,7 +101,14 @@ export default function ProgressPage() {
                       {topic.solved}/{topic.total}
                     </span>
                   </div>
-                  <div className="h-1.5 rounded-full bg-zinc-200 dark:bg-zinc-800">
+                  <div
+                    role="progressbar"
+                    aria-label={`${topic.tag} progress`}
+                    aria-valuemin={0}
+                    aria-valuemax={topic.total}
+                    aria-valuenow={topic.solved}
+                    className="h-1.5 rounded-full bg-zinc-200 dark:bg-zinc-800"
+                  >
                     <div
                       className="h-1.5 rounded-full bg-orange-500"
                       style={{ width: `${percent}%` }}

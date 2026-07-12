@@ -14,10 +14,17 @@ const adminSession = {
 };
 
 async function startAsMockAdmin(page: import("@playwright/test").Page) {
+  await page.context().addCookies([
+    {
+      name: "mlboost_auth",
+      value: "1",
+      url: "http://127.0.0.1:4173",
+      sameSite: "Lax",
+    },
+  ]);
   await page.addInitScript((session) => {
     localStorage.setItem("mlboost.mock.session", JSON.stringify(session));
     localStorage.setItem("accessToken", session.accessToken);
-    document.cookie = "mlboost_auth=1; path=/; samesite=lax";
   }, adminSession);
 }
 
@@ -27,7 +34,9 @@ test("a learner can run, submit, and review a mock solution", async ({ page }) =
   await page.getByLabel("Password").fill("password123");
   await page.getByRole("button", { name: "Sign in" }).click();
 
-  await page.getByText("KNN Classifier on Iris", { exact: false }).first().click();
+  await page
+    .getByRole("button", { name: "Open KNN Classifier on Iris" })
+    .click();
   await expect(page).toHaveURL(/\/problems\/knn-classifier-iris/);
 
   await page.getByRole("button", { name: "Run" }).click();
