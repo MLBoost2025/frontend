@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, Circle, Dot } from "lucide-react";
+import { CheckCircle2, Circle, CircleDashed } from "lucide-react";
 import { Problem } from "@/types";
 
 interface ProblemsTableProps {
@@ -8,24 +8,24 @@ interface ProblemsTableProps {
   onProblemClick?: (problemId: string) => void;
 }
 
-function difficultyClass(difficulty: Problem["difficulty"]): string {
+function difficultyPill(difficulty: Problem["difficulty"]): string {
   if (difficulty === "Easy") {
-    return "text-emerald-600 dark:text-emerald-300";
+    return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 ring-emerald-500/20";
   }
   if (difficulty === "Medium") {
-    return "text-amber-600 dark:text-amber-300";
+    return "bg-amber-500/10 text-amber-600 dark:text-amber-400 ring-amber-500/20";
   }
-  return "text-rose-600 dark:text-rose-300";
+  return "bg-rose-500/10 text-rose-600 dark:text-rose-400 ring-rose-500/20";
 }
 
 function statusIcon(status: Problem["status"]) {
   if (status === "solved") {
-    return <CheckCircle2 className="h-4 w-4 text-emerald-500" />;
+    return <CheckCircle2 className="h-[18px] w-[18px] text-emerald-500" />;
   }
   if (status === "attempted") {
-    return <Dot className="h-5 w-5 text-amber-500" />;
+    return <CircleDashed className="h-[18px] w-[18px] text-amber-500" />;
   }
-  return <Circle className="h-4 w-4 text-zinc-400" />;
+  return <Circle className="h-[18px] w-[18px] text-zinc-300 dark:text-zinc-600" />;
 }
 
 export default function ProblemsTable({
@@ -34,55 +34,77 @@ export default function ProblemsTable({
 }: ProblemsTableProps) {
   if (problems.length === 0) {
     return (
-      <div className="rounded-xl border border-zinc-200 bg-white/90 p-10 text-center text-sm text-zinc-500 dark:border-zinc-800 dark:bg-zinc-900/80 dark:text-zinc-400">
+      <div className="card p-12 text-center text-sm text-zinc-500 dark:text-zinc-400">
         No problems match your current filters.
       </div>
     );
   }
 
   return (
-    <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white/90 dark:border-zinc-800 dark:bg-zinc-900/80">
+    <div className="card overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[760px]">
-          <thead className="border-b border-zinc-200 bg-zinc-100/80 dark:border-zinc-800 dark:bg-zinc-900">
-            <tr className="text-left text-xs uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
-              <th className="px-4 py-3">Status</th>
-              <th className="px-4 py-3">Title</th>
-              <th className="px-4 py-3">Tags</th>
-              <th className="px-4 py-3">Difficulty</th>
-              <th className="px-4 py-3">Acceptance</th>
+        <table className="w-full min-w-[760px] border-collapse">
+          <thead>
+            <tr className="border-b border-zinc-200/70 text-left text-[11px] font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">
+              <th className="w-16 px-5 py-3 text-center">Status</th>
+              <th className="px-2 py-3">Title</th>
+              <th className="px-2 py-3">Tags</th>
+              <th className="px-2 py-3">Difficulty</th>
+              <th className="px-5 py-3 text-right">Acceptance</th>
             </tr>
           </thead>
           <tbody>
-            {problems.map((problem) => (
+            {problems.map((problem, index) => (
               <tr
                 key={problem.id}
                 onClick={() => onProblemClick?.(problem.id)}
-                className="cursor-pointer border-b border-zinc-200 text-sm transition hover:bg-zinc-100/70 dark:border-zinc-800 dark:hover:bg-zinc-800/70"
+                className={`group cursor-pointer text-sm transition-colors hover:bg-brand-500/[0.04] dark:hover:bg-white/[0.03] ${
+                  index !== problems.length - 1
+                    ? "border-b border-zinc-100 dark:border-white/[0.04]"
+                    : ""
+                }`}
               >
-                <td className="px-4 py-3">{statusIcon(problem.status)}</td>
-                <td className="px-4 py-3">
-                  <p className="font-medium text-zinc-900 dark:text-zinc-100">
+                <td className="px-5 py-3.5">
+                  <div className="flex justify-center">{statusIcon(problem.status)}</div>
+                </td>
+                <td className="px-2 py-3.5">
+                  <p className="font-medium text-zinc-800 transition-colors group-hover:text-brand-600 dark:text-zinc-100 dark:group-hover:text-brand-400">
                     {problem.title}
                   </p>
                 </td>
-                <td className="px-4 py-3">
+                <td className="px-2 py-3.5">
                   <div className="flex flex-wrap gap-1.5">
-                    {problem.tags.map((tag) => (
+                    {problem.tags.slice(0, 3).map((tag) => (
                       <span
                         key={`${problem.id}-${tag}`}
-                        className="rounded-md bg-zinc-200/80 px-2 py-0.5 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300"
+                        className="rounded-lg bg-zinc-100 px-2 py-0.5 text-[11px] font-medium text-zinc-500 dark:bg-white/[0.05] dark:text-zinc-400"
                       >
                         {tag}
                       </span>
                     ))}
                   </div>
                 </td>
-                <td className={`px-4 py-3 font-medium ${difficultyClass(problem.difficulty)}`}>
-                  {problem.difficulty}
+                <td className="px-2 py-3.5">
+                  <span
+                    className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset ${difficultyPill(
+                      problem.difficulty
+                    )}`}
+                  >
+                    {problem.difficulty}
+                  </span>
                 </td>
-                <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">
-                  {problem.acceptanceRate}%
+                <td className="px-5 py-3.5">
+                  <div className="flex items-center justify-end gap-2">
+                    <div className="hidden h-1.5 w-16 overflow-hidden rounded-full bg-zinc-200 dark:bg-white/[0.06] sm:block">
+                      <div
+                        className="h-full rounded-full bg-zinc-400 dark:bg-zinc-500"
+                        style={{ width: `${Math.min(problem.acceptanceRate, 100)}%` }}
+                      />
+                    </div>
+                    <span className="w-11 text-right text-xs font-medium text-zinc-500 dark:text-zinc-400">
+                      {problem.acceptanceRate}%
+                    </span>
+                  </div>
                 </td>
               </tr>
             ))}

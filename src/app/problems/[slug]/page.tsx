@@ -484,7 +484,7 @@ export default function ProblemArenaPage() {
 
   return (
     <div className="h-screen overflow-hidden bg-white text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
-      <header className="flex h-14 items-center justify-between border-b border-zinc-200 px-3 dark:border-zinc-800 md:px-4">
+      <header className="flex h-14 items-center justify-between border-b border-black/[0.06] px-3 dark:border-white/[0.06] md:px-4">
         <div className="flex min-w-0 items-center gap-2 md:gap-3">
           <button
             onClick={() => router.push("/problems")}
@@ -544,7 +544,7 @@ export default function ProblemArenaPage() {
             <section
               ref={problemPaneRef}
               tabIndex={-1}
-              className={`h-full overflow-y-auto border-r border-zinc-200 bg-zinc-50 p-4 focus:outline-none dark:border-zinc-800 dark:bg-zinc-900/60 md:p-6 ${
+              className={`h-full overflow-y-auto border-r border-black/[0.06] bg-zinc-50 p-4 focus:outline-none dark:border-white/[0.06] dark:bg-zinc-900/60 md:p-6 ${
                 activePane === "problem" ? "ring-1 ring-zinc-400 dark:ring-zinc-500" : ""
               }`}
               onFocus={() => setActivePane("problem")}
@@ -615,7 +615,7 @@ export default function ProblemArenaPage() {
                       {problem.examples.map((example, index) => (
                         <div
                           key={`${example.input}-${index}`}
-                          className="rounded-md border border-zinc-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-950/50"
+                          className="rounded-md border border-black/[0.06] bg-white p-3 dark:border-white/[0.06] dark:bg-zinc-950/50"
                         >
                           <p className="mb-2 text-xs font-semibold text-zinc-500 dark:text-zinc-400">
                             Example {index + 1}
@@ -656,11 +656,11 @@ export default function ProblemArenaPage() {
                     <p className="mt-1 text-sm text-zinc-600 dark:text-zinc-300">{problem.editorial.approach}</p>
 
                     <div className="mt-4 grid grid-cols-1 gap-2 md:grid-cols-2">
-                      <article className="rounded border border-zinc-200 bg-white p-3 text-xs text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950/50 dark:text-zinc-300">
+                      <article className="rounded border border-black/[0.06] bg-white p-3 text-xs text-zinc-600 dark:border-white/[0.06] dark:bg-zinc-950/50 dark:text-zinc-300">
                         <p className="text-zinc-400 dark:text-zinc-500">Time Complexity</p>
                         <p className="mt-1">{problem.editorial.timeComplexity}</p>
                       </article>
-                      <article className="rounded border border-zinc-200 bg-white p-3 text-xs text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950/50 dark:text-zinc-300">
+                      <article className="rounded border border-black/[0.06] bg-white p-3 text-xs text-zinc-600 dark:border-white/[0.06] dark:bg-zinc-950/50 dark:text-zinc-300">
                         <p className="text-zinc-400 dark:text-zinc-500">Space Complexity</p>
                         <p className="mt-1">{problem.editorial.spaceComplexity}</p>
                       </article>
@@ -679,7 +679,7 @@ export default function ProblemArenaPage() {
                     </ul>
                   </div>
                 ) : (
-                  <div className="rounded-md border border-zinc-200 bg-zinc-50 p-4 text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-950/60 dark:text-zinc-300">
+                  <div className="rounded-md border border-black/[0.06] bg-zinc-50 p-4 text-sm text-zinc-600 dark:border-white/[0.06] dark:bg-zinc-950/60 dark:text-zinc-300">
                     Editorial unlocks after an{" "}
                     <span className="font-semibold text-emerald-600 dark:text-emerald-300">Accepted</span>{" "}
                     submission on hidden tests.
@@ -701,7 +701,7 @@ export default function ProblemArenaPage() {
                       {history.map((entry) => (
                         <article
                           key={entry.id}
-                          className="rounded-md border border-zinc-200 bg-white p-3 dark:border-zinc-800 dark:bg-zinc-950/50"
+                          className="rounded-md border border-black/[0.06] bg-white p-3 dark:border-white/[0.06] dark:bg-zinc-950/50"
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div>
@@ -761,7 +761,7 @@ export default function ProblemArenaPage() {
                   }`}
                   onFocus={() => setActivePane("editor")}
                 >
-                  <div className="flex h-10 items-center justify-between border-b border-zinc-200 px-3 text-xs text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
+                  <div className="flex h-10 items-center justify-between border-b border-black/[0.06] px-3 text-xs text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">
                     <span>main.py</span>
                     <span className="text-[11px] text-zinc-400 dark:text-zinc-500">
                       Run: Ctrl/Cmd+Enter | Submit: Ctrl/Cmd+Shift+Enter | Focus panes: Alt+1/2/3
@@ -797,12 +797,12 @@ export default function ProblemArenaPage() {
                 <section
                   ref={consolePaneRef}
                   tabIndex={-1}
-                  className={`h-full border-t border-zinc-200 bg-zinc-50 focus:outline-none dark:border-zinc-800 dark:bg-zinc-900 ${
+                  className={`h-full border-t border-black/[0.06] bg-zinc-50 focus:outline-none dark:border-white/[0.06] dark:bg-zinc-900 ${
                     activePane === "console" ? "ring-1 ring-zinc-400 dark:ring-zinc-500" : ""
                   }`}
                   onFocus={() => setActivePane("console")}
                 >
-                  <div className="flex items-center justify-between border-b border-zinc-200 px-4 py-2 dark:border-zinc-800">
+                  <div className="flex items-center justify-between border-b border-black/[0.06] px-4 py-2 dark:border-white/[0.06]">
                     <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
                       <button
                         onClick={() => setActiveConsoleTab("sample")}

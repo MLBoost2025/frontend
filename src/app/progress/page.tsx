@@ -41,7 +41,7 @@ export default function ProgressPage() {
       ) : null}
 
       <section className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-        <article className="xl:col-span-2 rounded-xl border border-zinc-200 bg-white/90 p-5 dark:border-zinc-800 dark:bg-zinc-900/80">
+        <article className="xl:col-span-2 card p-5">
           <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
             Problems Solved This Week
           </h3>
@@ -52,7 +52,7 @@ export default function ProgressPage() {
               {weekly.map((item) => (
                 <div
                   key={item.date}
-                  className="rounded-md border border-zinc-200 px-2 py-3 text-center dark:border-zinc-800"
+                  className="rounded-xl bg-zinc-50/70 px-2 py-3 text-center dark:bg-white/[0.025]"
                 >
                   <p className="text-[11px] text-zinc-500 dark:text-zinc-400">{item.label}</p>
                   <p className="mt-2 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
@@ -64,7 +64,7 @@ export default function ProgressPage() {
           )}
         </article>
 
-        <article className="rounded-xl border border-zinc-200 bg-white/90 p-5 dark:border-zinc-800 dark:bg-zinc-900/80">
+        <article className="card p-5">
           <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
             Streak Summary
           </h3>
@@ -77,7 +77,7 @@ export default function ProgressPage() {
         </article>
       </section>
 
-      <section className="rounded-xl border border-zinc-200 bg-white/90 p-5 dark:border-zinc-800 dark:bg-zinc-900/80">
+      <section className="card p-5">
         <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
           Topic Coverage
         </h3>

@@ -37,7 +37,7 @@ export default function TracksPage() {
       subtitle="Company-flavored curated sets to prepare for specific ML/Data interviews"
       headerSlot={
         <section className="grid grid-cols-1 gap-3 md:grid-cols-3">
-          <article className="rounded-xl border border-zinc-200 bg-white/90 px-4 py-4 dark:border-zinc-800 dark:bg-zinc-900/80">
+          <article className="rounded-xl border border-black/[0.06] bg-white/90 px-4 py-4 dark:border-white/[0.06] dark:bg-zinc-900/80">
             <p className="text-xs uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
               Tracks
             </p>
@@ -45,7 +45,7 @@ export default function TracksPage() {
               {tracks.length}
             </p>
           </article>
-          <article className="rounded-xl border border-zinc-200 bg-white/90 px-4 py-4 dark:border-zinc-800 dark:bg-zinc-900/80">
+          <article className="rounded-xl border border-black/[0.06] bg-white/90 px-4 py-4 dark:border-white/[0.06] dark:bg-zinc-900/80">
             <p className="text-xs uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
               Solved in Tracks
             </p>
@@ -53,7 +53,7 @@ export default function TracksPage() {
               {totals.solvedProblems}
             </p>
           </article>
-          <article className="rounded-xl border border-zinc-200 bg-white/90 px-4 py-4 dark:border-zinc-800 dark:bg-zinc-900/80">
+          <article className="rounded-xl border border-black/[0.06] bg-white/90 px-4 py-4 dark:border-white/[0.06] dark:bg-zinc-900/80">
             <p className="text-xs uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
               Total Questions
             </p>
@@ -65,7 +65,7 @@ export default function TracksPage() {
       }
     >
       {isLoading ? (
-        <div className="rounded-xl border border-zinc-200 bg-white/90 p-10 text-center text-sm text-zinc-600 dark:border-zinc-800 dark:bg-zinc-900/80 dark:text-zinc-300">
+        <div className="rounded-xl border border-black/[0.06] bg-white/90 p-10 text-center text-sm text-zinc-600 dark:border-white/[0.06] dark:bg-zinc-900/80 dark:text-zinc-300">
           Loading company tracks...
         </div>
       ) : (
@@ -75,7 +75,7 @@ export default function TracksPage() {
             return (
               <article
                 key={track.id}
-                className="rounded-xl border border-zinc-200 bg-white/90 p-5 dark:border-zinc-800 dark:bg-zinc-900/80"
+                className="card p-5"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div>

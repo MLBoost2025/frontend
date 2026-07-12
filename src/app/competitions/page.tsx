@@ -101,7 +101,7 @@ export default function CompetitionsPage() {
       ) : null}
 
       <section className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-        <div className="xl:col-span-2 rounded-xl border border-zinc-200 bg-white/90 p-5 dark:border-zinc-800 dark:bg-zinc-900/80">
+        <div className="xl:col-span-2 card p-5">
           <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
             Contests
           </h3>
@@ -117,7 +117,7 @@ export default function CompetitionsPage() {
               {competitions.map((contest) => (
                 <article
                   key={contest.id}
-                  className="grid gap-3 rounded-lg border border-zinc-200 px-4 py-3 dark:border-zinc-800 md:grid-cols-[1fr_auto_auto_auto] md:items-center"
+                  className="grid gap-3 rounded-2xl bg-zinc-50/70 px-4 py-3 dark:bg-white/[0.025] md:grid-cols-[1fr_auto_auto_auto] md:items-center"
                 >
                   <div>
                     <div className="flex items-center gap-2">
@@ -145,7 +145,7 @@ export default function CompetitionsPage() {
           )}
         </div>
 
-        <div className="rounded-xl border border-zinc-200 bg-white/90 p-5 dark:border-zinc-800 dark:bg-zinc-900/80">
+        <div className="card p-5">
           <h3 className="mb-4 text-sm font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
             Leaderboard
           </h3>
@@ -158,7 +158,7 @@ export default function CompetitionsPage() {
               {leaderboard.map((entry) => (
                 <div
                   key={entry.userId}
-                  className="flex items-center justify-between rounded-md border border-zinc-200 px-3 py-2 text-sm dark:border-zinc-800"
+                  className="flex items-center justify-between rounded-xl bg-zinc-50/70 px-3 py-2 text-sm dark:bg-white/[0.025]"
                 >
                   <span className="font-medium text-zinc-800 dark:text-zinc-100">
                     #{entry.rank} {entry.username}

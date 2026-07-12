@@ -70,27 +70,35 @@ function LoginForm() {
   };
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center bg-zinc-100 px-4 py-12 dark:bg-zinc-950">
+    <main className="relative flex min-h-screen items-center justify-center px-4 py-12">
       <div className="absolute right-4 top-4">
         <ThemeSwitcher />
       </div>
-      <div className="w-full max-w-md rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-        <div className="mb-8">
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400">
+      <div className="w-full max-w-md">
+        <div className="mb-6 flex items-center justify-center gap-2.5">
+          <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 text-sm font-black text-white shadow-[0_6px_20px_-6px_rgba(244,102,31,0.7)]">
+            ML
+            <span className="absolute inset-0 rounded-xl ring-1 ring-inset ring-white/25" />
+          </div>
+          <span className="text-lg font-bold tracking-tight text-zinc-900 dark:text-white">
             MLBoost
-          </p>
-          <h1 className="mt-2 text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
+          </span>
+        </div>
+
+        <div className="card p-8">
+        <div className="mb-8">
+          <h1 className="text-2xl font-bold tracking-tight text-zinc-900 dark:text-white">
             {mode === "login" ? "Sign in to continue" : "Create your account"}
           </h1>
-          <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-400">
-            Practice ML coding with instant feedback.
+          <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+            LeetCode rigor meets Kaggle depth — practice ML with instant judging.
           </p>
         </div>
 
-        <div className="mb-6 grid grid-cols-2 rounded-lg border border-zinc-200 bg-zinc-100 p-1 dark:border-zinc-700 dark:bg-zinc-800">
+        <div className="mb-6 grid grid-cols-2 rounded-xl border border-black/[0.06] bg-zinc-100/70 p-1 dark:border-white/[0.06] dark:bg-white/[0.03]">
           <button
             type="button"
-            className={`rounded-md px-3 py-2 text-sm font-medium transition ${
+            className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
               mode === "login"
                 ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-700 dark:text-zinc-100"
                 : "text-zinc-600 hover:text-zinc-800 dark:text-zinc-300 dark:hover:text-zinc-100"
@@ -101,7 +109,7 @@ function LoginForm() {
           </button>
           <button
             type="button"
-            className={`rounded-md px-3 py-2 text-sm font-medium transition ${
+            className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
               mode === "signup"
                 ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-700 dark:text-zinc-100"
                 : "text-zinc-600 hover:text-zinc-800 dark:text-zinc-300 dark:hover:text-zinc-100"
@@ -123,7 +131,7 @@ function LoginForm() {
                 type="text"
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none ring-blue-500 transition placeholder:text-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+                className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none ring-brand-500/40 transition placeholder:text-zinc-400 focus:border-brand-500/50 focus:ring-2 dark:border-white/10 dark:bg-white/[0.03] dark:text-zinc-100"
                 placeholder="Ada Lovelace"
               />
             </label>
@@ -138,7 +146,7 @@ function LoginForm() {
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none ring-blue-500 transition placeholder:text-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+              className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none ring-brand-500/40 transition placeholder:text-zinc-400 focus:border-brand-500/50 focus:ring-2 dark:border-white/10 dark:bg-white/[0.03] dark:text-zinc-100"
               placeholder="you@example.com"
             />
           </label>
@@ -152,13 +160,13 @@ function LoginForm() {
               type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none ring-blue-500 transition placeholder:text-zinc-400 focus:ring-2 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-100"
+              className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2.5 text-sm text-zinc-900 outline-none ring-brand-500/40 transition placeholder:text-zinc-400 focus:border-brand-500/50 focus:ring-2 dark:border-white/10 dark:bg-white/[0.03] dark:text-zinc-100"
               placeholder="••••••••"
             />
           </label>
 
           {errorMessage && (
-            <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
+            <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/60 dark:bg-red-950/30 dark:text-red-300">
               {errorMessage}
             </p>
           )}
@@ -166,12 +174,17 @@ function LoginForm() {
           <button
             type="submit"
             disabled={isLoading}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+            className="btn-primary w-full py-2.5"
           >
             {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
             {mode === "login" ? "Sign in" : "Create account"}
           </button>
         </form>
+        </div>
+
+        <p className="mt-6 text-center text-xs text-zinc-400 dark:text-zinc-500">
+          By continuing you agree to practice responsibly. No spam, ever.
+        </p>
       </div>
     </main>
   );
@@ -181,7 +194,7 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <main className="flex min-h-screen items-center justify-center bg-zinc-100 text-zinc-700 dark:bg-zinc-950 dark:text-zinc-300">
+        <main className="flex min-h-screen items-center justify-center text-zinc-500 dark:text-zinc-400">
           Loading authentication...
         </main>
       }

@@ -1,19 +1,47 @@
 "use client";
 
+import type { LucideIcon } from "lucide-react";
+
+type Accent = "brand" | "accent" | "emerald" | "violet";
+
 interface StatsCardProps {
   title: string;
   value: string | number;
+  icon?: LucideIcon;
+  hint?: string;
+  accent?: Accent;
 }
 
-export default function StatsCard({ title, value }: StatsCardProps) {
+const ACCENTS: Record<Accent, string> = {
+  brand: "bg-brand-500/10 text-brand-500",
+  accent: "bg-accent-500/10 text-accent-500",
+  emerald: "bg-emerald-500/10 text-emerald-500",
+  violet: "bg-violet-500/10 text-violet-500",
+};
+
+export default function StatsCard({
+  title,
+  value,
+  icon: Icon,
+  hint,
+  accent = "brand",
+}: StatsCardProps) {
   return (
-    <article className="rounded-xl border border-zinc-200 bg-white/90 p-5 backdrop-blur transition hover:border-zinc-300 dark:border-zinc-800 dark:bg-zinc-900/80 dark:hover:border-zinc-700">
-      <p className="text-xs font-medium uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
-        {title}
-      </p>
-      <p className="mt-3 text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+    <article className="card card-hover p-5">
+      <div className="flex items-start justify-between gap-3">
+        <p className="eyebrow">{title}</p>
+        {Icon ? (
+          <span className={`flex h-8 w-8 items-center justify-center rounded-xl ${ACCENTS[accent]}`}>
+            <Icon className="h-4 w-4" />
+          </span>
+        ) : null}
+      </div>
+      <p className="mt-3 text-[26px] font-bold leading-none tracking-tight text-zinc-900 dark:text-white">
         {value}
       </p>
+      {hint ? (
+        <p className="mt-2 text-xs text-zinc-500 dark:text-zinc-400">{hint}</p>
+      ) : null}
     </article>
   );
 }
