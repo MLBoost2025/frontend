@@ -102,6 +102,11 @@ export interface SignupPayload extends LoginPayload {
   name: string;
 }
 
+export interface UpdateProfileInput {
+  name: string;
+  avatarUrl?: string;
+}
+
 export interface SubmissionTestCaseResult {
   name: string;
   visibility: TestCaseVisibility;

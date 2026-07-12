@@ -79,8 +79,12 @@ export default function Navbar({
         <div className="mx-1 hidden h-6 w-px bg-zinc-200 dark:bg-white/10 sm:block" />
 
         <div className="flex items-center gap-2.5">
-          <div className="relative flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-brand-600 text-xs font-bold text-white">
-            {avatarInitial}
+          <div
+            className="relative flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-brand-600 bg-cover bg-center text-xs font-bold text-white"
+            style={user?.avatarUrl ? { backgroundImage: `url(${user.avatarUrl})` } : undefined}
+            aria-label={`${user?.name || "User"} avatar`}
+          >
+            {user?.avatarUrl ? null : avatarInitial}
             <span className="absolute inset-0 rounded-full ring-1 ring-inset ring-white/25" />
           </div>
           <div className="hidden leading-tight lg:block">
