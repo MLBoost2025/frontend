@@ -81,7 +81,7 @@ export default function TracksPage() {
               >
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-orange-500">
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-600 dark:text-brand-300">
                       {track.company}
                     </p>
                     <h2 className="mt-1 text-lg font-semibold text-zinc-900 dark:text-zinc-100">
@@ -120,7 +120,7 @@ export default function TracksPage() {
                     aria-valuenow={track.solvedProblems}
                     className="h-2 rounded-full bg-zinc-200 dark:bg-zinc-800"
                   >
-                    <div className="h-2 rounded-full bg-orange-500" style={{ width: `${progress}%` }} />
+                    <div className="h-2 rounded-full bg-brand-500" style={{ width: `${progress}%` }} />
                   </div>
                 </div>
 

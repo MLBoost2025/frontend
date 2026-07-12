@@ -59,10 +59,10 @@ export default function CompetitionDetailPage() {
       {loading ? <div className="card p-6 text-sm text-zinc-500">Loading contest…</div> : error && !contest ? <div role="alert" className="card p-6 text-sm text-rose-600">{error}</div> : contest ? (
         <>
           <section className="card overflow-hidden">
-            <div className="bg-gradient-to-r from-orange-600 via-amber-500 to-orange-500 p-6 text-white sm:p-8">
-              <p className="eyebrow !text-orange-100">{statusLabel(contest)}</p>
+            <div className="bg-gradient-to-r from-brand-800 via-brand-600 to-brand-500 p-6 text-white sm:p-8">
+              <p className="eyebrow !text-brand-100">{statusLabel(contest)}</p>
               <h1 className="mt-2 text-2xl font-semibold tracking-tight sm:text-3xl">{contest.title}</h1>
-              <p className="mt-3 max-w-2xl text-sm text-orange-50">{contest.description || "A timed ML problem-solving contest."}</p>
+              <p className="mt-3 max-w-2xl text-sm text-brand-50">{contest.description || "A timed ML problem-solving contest."}</p>
               <div className="mt-5 flex flex-wrap gap-2 text-xs font-semibold">
                 <span className="rounded-full bg-white/15 px-3 py-1.5">{contest.problemCount} problems</span>
                 <span className="rounded-full bg-white/15 px-3 py-1.5">{contest.participantCount.toLocaleString()} participants</span>
@@ -70,8 +70,8 @@ export default function CompetitionDetailPage() {
               </div>
               <div className="mt-6">
                 {isAuthenticated ? (
-                  <button type="button" onClick={() => void register()} disabled={registering || registered || contest.status === "ended"} className="rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-orange-700 shadow-sm transition hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-60">{registered ? "Registered" : registering ? "Registering…" : contest.status === "ended" ? "Contest ended" : "Register"}</button>
-                ) : <Link href="/login" className="inline-flex rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-orange-700 shadow-sm">Sign in to register</Link>}
+                  <button type="button" onClick={() => void register()} disabled={registering || registered || contest.status === "ended"} className="rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-brand-800 shadow-sm transition hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-60">{registered ? "Registered" : registering ? "Registering…" : contest.status === "ended" ? "Contest ended" : "Register"}</button>
+                ) : <Link href="/login" className="inline-flex rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-brand-800 shadow-sm">Sign in to register</Link>}
               </div>
             </div>
           </section>

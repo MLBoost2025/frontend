@@ -73,14 +73,14 @@ export default function Sidebar({
         aria-label="Primary navigation"
         aria-hidden={!isOpen}
         inert={!isOpen || undefined}
-        className={`fixed left-0 top-0 z-20 flex h-screen w-60 flex-col border-r border-zinc-200/70 bg-white/70 backdrop-blur-xl transition-transform duration-300 dark:border-white/[0.06] dark:bg-[#0b0c10]/80 ${
+        className={`fixed left-0 top-0 z-20 flex h-screen w-60 flex-col border-r border-zinc-200/70 bg-white/70 backdrop-blur-xl transition-transform duration-300 dark:border-white/[0.06] dark:bg-[#11130d]/90 ${
           isOpen ? "translate-x-0" : "-translate-x-60"
         }`}
       >
         {/* Brand */}
         <div className="flex h-16 items-center justify-between px-4">
           <Link href="/" className="group flex items-center gap-2.5">
-            <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 text-[13px] font-black tracking-tight text-white shadow-[0_4px_14px_-4px_rgba(244,102,31,0.6)]">
+            <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-800 text-[13px] font-black tracking-tight text-white shadow-[0_4px_14px_-4px_rgba(99,107,47,0.55)]">
               ML
               <span className="absolute inset-0 rounded-xl ring-1 ring-inset ring-white/25" />
             </div>

@@ -45,7 +45,7 @@ export default function Navbar({
   return (
     <nav
       aria-label="Page header"
-      className={`fixed top-0 right-0 z-10 flex h-16 items-center gap-4 border-b border-zinc-200/70 bg-white/70 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#0b0c10]/70 ${
+      className={`fixed top-0 right-0 z-10 flex h-16 items-center gap-4 border-b border-zinc-200/70 bg-white/70 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#11130d]/80 ${
         isSidebarOpen ? "left-0 px-5 lg:left-60" : "left-0 pl-16 pr-5 lg:px-5"
       }`}
     >
@@ -82,7 +82,7 @@ export default function Navbar({
 
         <div className="flex items-center gap-2.5">
           <div
-            className="relative flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-brand-600 bg-cover bg-center text-xs font-bold text-white"
+            className="relative flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-800 bg-cover bg-center text-xs font-bold text-white"
             style={user?.avatarUrl ? { backgroundImage: `url(${user.avatarUrl})` } : undefined}
             role="img"
             aria-label={`${user?.name || "User"} avatar`}

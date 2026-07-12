@@ -505,7 +505,7 @@ export default function ProblemArenaPage() {
 
   if (isLoadingProblem) {
     return (
-      <div className="flex h-screen items-center justify-center bg-white text-zinc-500 dark:bg-[#0a0b0e] dark:text-zinc-400">
+      <div className="flex h-screen items-center justify-center bg-white text-zinc-500 dark:bg-[#11130d] dark:text-zinc-400">
         <Loader2 className="mr-2 h-5 w-5 animate-spin text-brand-500" />
         Loading problem arena…
       </div>
@@ -514,7 +514,7 @@ export default function ProblemArenaPage() {
 
   if (error || !problem) {
     return (
-      <div className="flex h-screen flex-col items-center justify-center gap-4 bg-white px-6 text-zinc-900 dark:bg-[#0a0b0e] dark:text-zinc-100">
+      <div className="flex h-screen flex-col items-center justify-center gap-4 bg-white px-6 text-zinc-900 dark:bg-[#11130d] dark:text-zinc-100">
         <p className="text-center text-sm text-zinc-600 dark:text-zinc-300">
           {error ?? "Problem could not be loaded."}
         </p>
@@ -529,8 +529,8 @@ export default function ProblemArenaPage() {
   }
 
   return (
-    <div className="h-screen overflow-hidden bg-white text-zinc-900 dark:bg-[#0a0b0e] dark:text-zinc-100">
-      <header className="flex h-14 items-center justify-between border-b border-black/[0.06] bg-white/70 px-3 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#0b0c10]/70 md:px-4">
+    <div className="h-screen overflow-hidden bg-white text-zinc-900 dark:bg-[#11130d] dark:text-zinc-100">
+      <header className="flex h-14 items-center justify-between border-b border-black/[0.06] bg-white/70 px-3 backdrop-blur-xl dark:border-white/[0.06] dark:bg-[#11130d]/80 md:px-4">
         <div className="flex min-w-0 items-center gap-2.5 md:gap-3">
           <button
             onClick={() => router.push("/problems")}
@@ -590,7 +590,7 @@ export default function ProblemArenaPage() {
             <section
               ref={problemPaneRef}
               tabIndex={-1}
-              className={`h-full overflow-y-auto border-r border-black/[0.06] bg-white p-4 focus:outline-none dark:border-white/[0.06] dark:bg-[#0b0c10]/40 md:p-6 ${
+              className={`h-full overflow-y-auto border-r border-black/[0.06] bg-white p-4 focus:outline-none dark:border-white/[0.06] dark:bg-[#14170f]/60 md:p-6 ${
                 activePane === "problem" ? "ring-1 ring-inset ring-brand-500/30" : ""
               }`}
               onFocus={() => setActivePane("problem")}
@@ -757,7 +757,7 @@ export default function ProblemArenaPage() {
             <Group orientation="vertical" className="h-full">
               <Panel defaultSize={72} minSize={35}>
                 <section
-                  className={`h-full bg-white dark:bg-[#0a0b0e] ${
+                  className={`h-full bg-white dark:bg-[#11130d] ${
                     activePane === "editor" ? "ring-1 ring-inset ring-brand-500/30" : ""
                   }`}
                   onFocus={() => setActivePane("editor")}
@@ -805,7 +805,7 @@ export default function ProblemArenaPage() {
                 <section
                   ref={consolePaneRef}
                   tabIndex={-1}
-                  className={`h-full border-t border-black/[0.06] bg-white focus:outline-none dark:border-white/[0.06] dark:bg-[#0b0c10]/40 ${
+                  className={`h-full border-t border-black/[0.06] bg-white focus:outline-none dark:border-white/[0.06] dark:bg-[#14170f]/60 ${
                     activePane === "console" ? "ring-1 ring-inset ring-brand-500/30" : ""
                   }`}
                   onFocus={() => setActivePane("console")}

@@ -93,7 +93,7 @@ export default function ProfilePage() {
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-4">
                 <div
-                  className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-brand-600 bg-cover bg-center text-xl font-bold text-white shadow-lg shadow-brand-500/20"
+                  className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-800 bg-cover bg-center text-xl font-bold text-white shadow-lg shadow-brand-500/20"
                   style={profile.user.avatarUrl ? { backgroundImage: `url(${profile.user.avatarUrl})` } : undefined}
                   role="img"
                   aria-label={`${profile.user.name} avatar`}
@@ -193,7 +193,7 @@ export default function ProfilePage() {
                         aria-valuenow={topic.solved}
                         className="h-2 rounded-full bg-zinc-200 dark:bg-zinc-800"
                       >
-                        <div className="h-2 rounded-full bg-orange-500" style={{ width: `${pct}%` }} />
+                        <div className="h-2 rounded-full bg-brand-500" style={{ width: `${pct}%` }} />
                       </div>
                     </div>
                   );
