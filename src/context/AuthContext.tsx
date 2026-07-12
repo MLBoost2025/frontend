@@ -8,12 +8,13 @@ import {
   useMemo,
   useState,
 } from "react";
-import { AuthSession, LoginPayload, SignupPayload, User } from "@/types";
+import { AuthSession, LoginPayload, SignupPayload, UpdateProfileInput, User } from "@/types";
 import {
   getCurrentSession,
   loginUser,
   logoutUser,
   signupUser,
+  updateUserProfile,
 } from "@/lib/api";
 
 interface AuthContextValue {
@@ -26,6 +27,7 @@ interface AuthContextValue {
   signup: (payload: SignupPayload) => Promise<void>;
   logout: () => Promise<void>;
   refreshSession: () => Promise<void>;
+  updateProfile: (input: UpdateProfileInput) => Promise<User>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -78,6 +80,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const updateProfile = useCallback(async (input: UpdateProfileInput) => {
+    const user = await updateUserProfile(input);
+    setSession((current) => (current ? { ...current, user } : current));
+    return user;
+  }, []);
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user: session?.user ?? null,
@@ -89,8 +97,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       signup,
       logout,
       refreshSession,
+      updateProfile,
     }),
-    [session, isLoading, login, signup, logout, refreshSession]
+    [session, isLoading, login, signup, logout, refreshSession, updateProfile]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

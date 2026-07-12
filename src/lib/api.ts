@@ -22,6 +22,8 @@ import {
   RecentActivityItem,
   SubmissionTestCaseResult,
   TopicProgressPoint,
+  UpdateProfileInput,
+  User,
   UserProfile,
   UserProgress,
   UserStats,
@@ -1506,6 +1508,51 @@ export async function fetchUserProfile(): Promise<UserProfile> {
     () => liveFetchUserProfile(),
     () => mockFetchUserProfile()
   );
+}
+
+export async function updateUserProfile(input: UpdateProfileInput): Promise<User> {
+  const current = readStoredSession();
+  if (!current) throw new Error("Sign in to update your profile.");
+
+  const updated = await runWithBackendSwitch(
+    "update_user_profile",
+    async () => {
+      const raw = await fetchWithRetry<{
+        _id?: string;
+        id?: string;
+        username?: string;
+        email?: string;
+        avatarUrl?: string;
+        createdAt?: string;
+        roles?: string[];
+      }>(`/users/${current.user.id}`, {
+        method: "PUT",
+        body: JSON.stringify({
+          username: input.name.trim(),
+          avatarUrl: input.avatarUrl?.trim() || "",
+        }),
+      });
+      return {
+        id: raw.id || raw._id || current.user.id,
+        name: raw.username || input.name.trim(),
+        email: raw.email || current.user.email,
+        avatarUrl: raw.avatarUrl || "",
+        createdAt: raw.createdAt || current.user.createdAt,
+        roles: raw.roles || current.user.roles,
+      };
+    },
+    async () => {
+      await wait(200);
+      return {
+        ...current.user,
+        name: input.name.trim(),
+        avatarUrl: input.avatarUrl?.trim() || "",
+      };
+    }
+  );
+
+  persistSession({ ...current, user: updated });
+  return clone(updated);
 }
 
 const EMPTY_DIFFICULTY = { Easy: { solved: 0, total: 0 }, Medium: { solved: 0, total: 0 }, Hard: { solved: 0, total: 0 } };

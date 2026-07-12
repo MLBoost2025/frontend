@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import MainLayout from "../components/MainLayout";
 import { fetchUserProfile } from "@/lib/api";
 import { UserProfile } from "@/types";
+import { useAuth } from "@/context/AuthContext";
 
 function heatLevelClass(count: number): string {
   if (count >= 5) {
@@ -19,8 +20,14 @@ function heatLevelClass(count: number): string {
 }
 
 export default function ProfilePage() {
+  const { updateProfile } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  const [name, setName] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [saveMessage, setSaveMessage] = useState("");
 
   useEffect(() => {
     const load = async () => {
@@ -28,6 +35,8 @@ export default function ProfilePage() {
         setIsLoading(true);
         const data = await fetchUserProfile();
         setProfile(data);
+        setName(data.user.name);
+        setAvatarUrl(data.user.avatarUrl || "");
       } finally {
         setIsLoading(false);
       }
@@ -35,6 +44,24 @@ export default function ProfilePage() {
 
     void load();
   }, []);
+
+  async function saveProfile(event: React.FormEvent) {
+    event.preventDefault();
+    setSaveState("saving");
+    setSaveMessage("");
+    try {
+      const user = await updateProfile({ name, avatarUrl });
+      setProfile((current) => current ? { ...current, user } : current);
+      setName(user.name);
+      setAvatarUrl(user.avatarUrl || "");
+      setSaveState("saved");
+      setSaveMessage("Profile updated.");
+      setIsEditing(false);
+    } catch (error) {
+      setSaveState("error");
+      setSaveMessage(error instanceof Error ? error.message : "Could not update profile.");
+    }
+  }
 
   const heatmapWeeks = useMemo(() => {
     if (!profile) {
@@ -62,6 +89,45 @@ export default function ProfilePage() {
         </div>
       ) : (
         <>
+          <section className="card p-5 sm:p-6">
+            <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-4">
+                <div
+                  className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-400 to-brand-600 bg-cover bg-center text-xl font-bold text-white shadow-lg shadow-brand-500/20"
+                  style={profile.user.avatarUrl ? { backgroundImage: `url(${profile.user.avatarUrl})` } : undefined}
+                  aria-label={`${profile.user.name} avatar`}
+                >
+                  {profile.user.avatarUrl ? null : profile.user.name.trim().charAt(0).toUpperCase()}
+                </div>
+                <div className="min-w-0">
+                  <p className="eyebrow">Your profile</p>
+                  <h2 className="mt-1 truncate text-xl font-semibold text-zinc-900 dark:text-zinc-100">{profile.user.name}</h2>
+                  <p className="truncate text-sm text-zinc-500 dark:text-zinc-400">{profile.user.email}</p>
+                </div>
+              </div>
+              <button type="button" onClick={() => { setIsEditing((value) => !value); setSaveState("idle"); setSaveMessage(""); }} className="rounded-full bg-brand-500 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-600">
+                {isEditing ? "Cancel" : "Edit profile"}
+              </button>
+            </div>
+
+            {isEditing ? (
+              <form onSubmit={saveProfile} className="mt-6 grid gap-4 rounded-2xl bg-zinc-100/70 p-4 dark:bg-white/[0.04] sm:grid-cols-2">
+                <label className="block">
+                  <span className="mb-1.5 block text-xs font-semibold text-zinc-600 dark:text-zinc-300">Display name</span>
+                  <input value={name} onChange={(event) => setName(event.target.value)} minLength={3} maxLength={28} required className="w-full rounded-xl bg-white px-3.5 py-2.5 text-sm outline-none ring-1 ring-black/[0.05] focus:ring-brand-400/60 dark:bg-white/[0.07] dark:ring-white/[0.05]" />
+                </label>
+                <label className="block">
+                  <span className="mb-1.5 block text-xs font-semibold text-zinc-600 dark:text-zinc-300">Avatar URL</span>
+                  <input type="url" value={avatarUrl} onChange={(event) => setAvatarUrl(event.target.value)} maxLength={2048} placeholder="https://example.com/avatar.jpg" className="w-full rounded-xl bg-white px-3.5 py-2.5 text-sm outline-none ring-1 ring-black/[0.05] focus:ring-brand-400/60 dark:bg-white/[0.07] dark:ring-white/[0.05]" />
+                </label>
+                <div className="sm:col-span-2">
+                  <button type="submit" disabled={saveState === "saving"} className="btn-primary disabled:opacity-50">{saveState === "saving" ? "Saving…" : "Save changes"}</button>
+                </div>
+              </form>
+            ) : null}
+            {saveMessage ? <p role={saveState === "error" ? "alert" : "status"} className={`mt-4 rounded-xl px-3.5 py-2.5 text-sm ${saveState === "error" ? "bg-rose-500/10 text-rose-600 dark:text-rose-300" : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-300"}`}>{saveMessage}</p> : null}
+          </section>
+
           <section className="grid grid-cols-1 gap-3 md:grid-cols-4">
             <article className="rounded-xl border border-black/[0.06] bg-white/90 p-4 dark:border-white/[0.06] dark:bg-zinc-900/80">
               <p className="text-xs uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">Solved</p>
