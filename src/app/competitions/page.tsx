@@ -83,14 +83,14 @@ export default function CompetitionsPage() {
       title="Competitions"
       subtitle="Timed contests designed for ML interview readiness"
     >
-      <section className="rounded-2xl bg-gradient-to-r from-orange-600 via-amber-500 to-orange-500 px-6 py-6 text-white">
-        <p className="text-xs uppercase tracking-[0.2em] text-orange-100">
+      <section className="rounded-2xl bg-gradient-to-r from-brand-800 via-brand-600 to-brand-500 px-6 py-6 text-white">
+        <p className="text-xs uppercase tracking-[0.2em] text-brand-100">
           {featured?.status === "live" ? "Live Now" : "Featured Event"}
         </p>
         <h2 className="mt-2 text-2xl font-semibold tracking-tight">
           {featured?.title ?? "No contests yet"}
         </h2>
-        <p className="mt-2 text-sm text-orange-50">
+        <p className="mt-2 text-sm text-brand-50">
           {featured?.description ?? "Check back soon for upcoming ML competitions."}
         </p>
       </section>
@@ -138,7 +138,7 @@ export default function CompetitionsPage() {
                   <p className="text-xs text-zinc-600 dark:text-zinc-300">
                     {durationLabel(contest)}
                   </p>
-                  <p className="text-xs font-medium text-orange-600 dark:text-orange-300">
+                  <p className="text-xs font-medium text-brand-600 dark:text-brand-300">
                     {contest.problemCount} problems
                   </p>
                 </Link>

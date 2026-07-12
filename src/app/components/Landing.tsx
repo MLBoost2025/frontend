@@ -25,13 +25,13 @@ const FEATURES = [
     icon: Trophy,
     title: "Contests & leaderboards",
     body: "Timed ML competitions with live standings — climb the global ranks as you solve.",
-    accent: "text-amber-500 bg-amber-500/10",
+    accent: "text-brand-700 bg-brand-300/35 dark:text-brand-300",
   },
   {
     icon: BookOpen,
     title: "Guided learn tracks",
     body: "Curated paths that map directly to hands-on problems, from foundations to model selection.",
-    accent: "text-accent-500 bg-accent-500/10",
+    accent: "text-accent-600 bg-accent-400/25 dark:text-accent-400",
   },
   {
     icon: BarChart3,
@@ -59,7 +59,7 @@ export default function Landing() {
       {/* Top nav */}
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-5">
         <div className="flex items-center gap-2.5">
-          <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 text-[13px] font-black text-white shadow-[0_4px_14px_-4px_rgba(244,102,31,0.6)]">
+          <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-800 text-[13px] font-black text-white shadow-[0_4px_14px_-4px_rgba(99,107,47,0.55)]">
             ML
             <span className="absolute inset-0 rounded-xl ring-1 ring-inset ring-white/25" />
           </div>
@@ -116,7 +116,7 @@ export default function Landing() {
           <div className="card overflow-hidden p-0">
             <div className="flex items-center gap-2 border-b border-black/[0.05] px-4 py-2.5 dark:border-white/[0.06]">
               <span className="h-2.5 w-2.5 rounded-full bg-rose-400/70" />
-              <span className="h-2.5 w-2.5 rounded-full bg-amber-400/70" />
+              <span className="h-2.5 w-2.5 rounded-full bg-brand-300/90" />
               <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/70" />
               <span className="ml-3 font-mono text-xs text-zinc-400">knn-classifier-iris · main.py</span>
             </div>
@@ -198,12 +198,12 @@ export default function Landing() {
 
       {/* Final CTA */}
       <section className="mx-auto w-full max-w-6xl px-5 pb-16">
-        <div className="relative overflow-hidden rounded-3xl border border-white/[0.06] bg-[#0c0e13] px-8 py-12 text-center text-white">
+        <div className="relative overflow-hidden rounded-3xl border border-white/[0.06] bg-[#171a10] px-8 py-12 text-center text-white">
           <div
             className="pointer-events-none absolute inset-0"
             style={{
               backgroundImage:
-                "radial-gradient(600px 300px at 80% -30%, rgba(244,102,31,0.35), transparent 60%), radial-gradient(500px 260px at 15% 130%, rgba(14,165,233,0.22), transparent 60%)",
+                "radial-gradient(600px 300px at 80% -30%, rgba(99,107,47,0.62), transparent 60%), radial-gradient(500px 260px at 15% 130%, rgba(212,222,149,0.20), transparent 60%)",
             }}
           />
           <div className="relative">

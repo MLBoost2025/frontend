@@ -34,7 +34,7 @@ export default function WeeklyGoals({ goals, title = "Weekly Goals" }: WeeklyGoa
               </div>
               <div className="h-1.5 rounded-full bg-zinc-200 dark:bg-zinc-800">
                 <div
-                  className="h-1.5 rounded-full bg-orange-500"
+                  className="h-1.5 rounded-full bg-brand-500"
                   style={{ width: `${pct}%` }}
                 />
               </div>

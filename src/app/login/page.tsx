@@ -76,7 +76,7 @@ function LoginForm() {
       </div>
       <div className="w-full max-w-md">
         <div className="mb-6 flex items-center justify-center gap-2.5">
-          <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-brand-400 to-brand-600 text-sm font-black text-white shadow-[0_6px_20px_-6px_rgba(244,102,31,0.7)]">
+          <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-brand-500 to-brand-800 text-sm font-black text-white shadow-[0_6px_20px_-6px_rgba(99,107,47,0.6)]">
             ML
             <span className="absolute inset-0 rounded-xl ring-1 ring-inset ring-white/25" />
           </div>
