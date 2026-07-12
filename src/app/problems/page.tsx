@@ -21,12 +21,20 @@ export default function ProblemsPage() {
     category: "All Categories",
     statusFilter: "all",
   });
+  const trackTitle = searchParams.get("track")?.trim() || "";
+  const trackTags = useMemo(
+    () => (searchParams.get("tags") || "").split(",").map((tag) => tag.trim()).filter(Boolean),
+    [searchParams]
+  );
+  const trackTagsKey = trackTags.join(",");
 
   useEffect(() => {
     const load = async () => {
       try {
         setIsLoading(true);
-        const data = await fetchProblems();
+        const data = await fetchProblems({
+          tags: trackTagsKey ? trackTagsKey.split(",") : [],
+        });
         setProblems(data);
       } finally {
         setIsLoading(false);
@@ -34,7 +42,7 @@ export default function ProblemsPage() {
     };
 
     void load();
-  }, []);
+  }, [trackTagsKey]);
 
   useEffect(() => {
     const categoryParam = searchParams.get("category");
@@ -141,6 +149,20 @@ export default function ProblemsPage() {
         setFilters((current) => ({ ...current, category }));
       }}
     >
+      {trackTitle ? (
+        <section className="flex flex-col gap-3 rounded-2xl bg-brand-500/10 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="eyebrow">Interview track</p>
+            <h2 className="mt-1 text-lg font-semibold text-zinc-900 dark:text-zinc-100">{trackTitle}</h2>
+            <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+              Showing problems matching {trackTags.join(", ") || "this track"}.
+            </p>
+          </div>
+          <button type="button" onClick={() => router.push("/problems")} className="w-fit rounded-full bg-white px-4 py-2 text-sm font-semibold text-zinc-700 shadow-sm dark:bg-white/[0.08] dark:text-zinc-200">
+            View all problems
+          </button>
+        </section>
+      ) : null}
       <section className="rounded-xl border border-black/[0.06] bg-white/90 p-4 dark:border-white/[0.06] dark:bg-zinc-900/80">
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_auto_auto_auto]">
           <SearchBar

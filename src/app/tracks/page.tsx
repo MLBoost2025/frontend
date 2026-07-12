@@ -71,7 +71,9 @@ export default function TracksPage() {
       ) : (
         <section className="grid grid-cols-1 gap-4 xl:grid-cols-2">
           {tracks.map((track) => {
-            const progress = Math.round((track.solvedProblems / track.totalProblems) * 100);
+            const progress = track.totalProblems > 0
+              ? Math.round((track.solvedProblems / track.totalProblems) * 100)
+              : 0;
             return (
               <article
                 key={track.id}
@@ -90,8 +92,14 @@ export default function TracksPage() {
                     </p>
                   </div>
                   <button
-                    onClick={() => router.push("/problems")}
-                    className="rounded-lg border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
+                    onClick={() => {
+                      const query = new URLSearchParams({
+                        track: track.title,
+                        tags: track.tags.join(","),
+                      });
+                      router.push(`/problems?${query.toString()}`);
+                    }}
+                    className="rounded-full bg-brand-500 px-3.5 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-brand-600"
                   >
                     Open Track
                   </button>

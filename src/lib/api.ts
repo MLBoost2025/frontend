@@ -1071,8 +1071,11 @@ function normalizeLiveSubmission(
   };
 }
 
-function mockFetchProblems(): Problem[] {
-  return clone(MOCK_PROBLEMS.map(normalizeToListItem));
+function mockFetchProblems(tags: string[] = []): Problem[] {
+  const problems = tags.length
+    ? MOCK_PROBLEMS.filter((problem) => problem.tags.some((tag) => tags.includes(tag)))
+    : MOCK_PROBLEMS;
+  return clone(problems.map(normalizeToListItem));
 }
 
 function mockFetchProblemBySlug(slug: string): ProblemDetail {
@@ -1083,8 +1086,9 @@ function mockFetchProblemBySlug(slug: string): ProblemDetail {
   return clone(problem);
 }
 
-async function liveFetchProblems(): Promise<Problem[]> {
-  const data = await fetchWithRetry<unknown[]>("/problems", { method: "GET" });
+async function liveFetchProblems(tags: string[] = []): Promise<Problem[]> {
+  const query = tags.length ? `?tags=${encodeURIComponent(tags.join(","))}` : "";
+  const data = await fetchWithRetry<unknown[]>(`/problems${query}`, { method: "GET" });
   return data.map((entry) => toProblemFromLive(entry));
 }
 
@@ -1260,8 +1264,19 @@ async function mockFetchCompanyTracks(): Promise<CompanyTrack[]> {
 }
 
 async function liveFetchCompanyTracks(): Promise<CompanyTrack[]> {
-  const data = await fetchWithRetry<CompanyTrack[]>("/tracks", { method: "GET" });
-  return data;
+  const tracks = await fetchWithRetry<LearningTrack[]>("/learn/tracks", { method: "GET" });
+  return Promise.all((Array.isArray(tracks) ? tracks : []).map(async (track) => {
+    const problems = await liveFetchProblems(track.tags ?? []);
+    return {
+      id: track.id,
+      title: track.title,
+      company: "MLBoost curated",
+      description: track.description ?? "",
+      totalProblems: problems.length,
+      solvedProblems: problems.filter((problem) => problem.status === "solved").length,
+      tags: track.tags ?? [],
+    };
+  }));
 }
 
 export async function loginUser(payload: LoginPayload): Promise<AuthSession> {
@@ -1338,14 +1353,15 @@ export async function logoutUser(): Promise<void> {
   void trackEvent({ name: "auth_logout" });
 }
 
-export async function fetchProblems(): Promise<Problem[]> {
+export async function fetchProblems(options: { tags?: string[] } = {}): Promise<Problem[]> {
+  const tags = options.tags?.map((tag) => tag.trim()).filter(Boolean) ?? [];
   const mockExecutor = async () => {
     await wait(FETCH_DELAY_MS);
-    return mockFetchProblems();
+    return mockFetchProblems(tags);
   };
 
   const liveExecutor = async () => {
-    const data = await liveFetchProblems();
+    const data = await liveFetchProblems(tags);
     return data;
   };
 
