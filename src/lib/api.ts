@@ -489,18 +489,22 @@ function persistSession(session: AuthSession): void {
   }
   window.localStorage.setItem(MOCK_SESSION_KEY, JSON.stringify(session));
   window.localStorage.setItem(ACCESS_TOKEN_KEY, session.accessToken);
-  window.document.cookie = `${AUTH_COOKIE_NAME}=1; path=/; max-age=${AUTH_COOKIE_TTL_SECONDS}; samesite=lax`;
+  if (getNormalizedApiMode() === "mock") {
+    window.document.cookie = `${AUTH_COOKIE_NAME}=1; path=/; max-age=${AUTH_COOKIE_TTL_SECONDS}; samesite=lax`;
+  } else {
+    window.document.cookie = `${AUTH_COOKIE_NAME}=; path=/; max-age=0; samesite=lax`;
+  }
 }
 
 function readStoredSession(): AuthSession | null {
   if (!isBrowser()) {
     return null;
   }
-  const hasAuthCookie = window.document.cookie
-    .split(";")
-    .some((part) => part.trim().startsWith(`${AUTH_COOKIE_NAME}=`));
+  const hasMockAuthCookie = window.document.cookie
+      .split(";")
+      .some((part) => part.trim().startsWith(`${AUTH_COOKIE_NAME}=`));
 
-  if (!hasAuthCookie) {
+  if (getNormalizedApiMode() === "mock" && !hasMockAuthCookie) {
     window.localStorage.removeItem(MOCK_SESSION_KEY);
     window.localStorage.removeItem(ACCESS_TOKEN_KEY);
     return null;
@@ -1343,12 +1347,53 @@ export async function signupUser(payload: SignupPayload): Promise<AuthSession> {
 }
 
 export async function getCurrentSession(): Promise<AuthSession | null> {
-  await wait(120);
-  return clone(readStoredSession());
+  if (getNormalizedApiMode() === "mock") {
+    await wait(120);
+    return clone(readStoredSession());
+  }
+
+  try {
+    const sessionState = await fetchWithRetry<{
+      authenticated: boolean;
+      user: { id?: string; _id?: string; username?: string; email?: string; avatarUrl?: string; createdAt?: string; roles?: string[] };
+    }>("/auth/session", { method: "GET" });
+    if (!sessionState.authenticated) {
+      clearStoredSession();
+      return null;
+    }
+    const refreshed = await fetchWithRetry<{ accessToken: string }>("/auth/refresh", { method: "POST" });
+    const stored = readStoredSession();
+    const user = sessionState.user;
+    const session: AuthSession = {
+      user: {
+        id: user.id || user._id || stored?.user.id || "",
+        name: user.username || stored?.user.name || "User",
+        email: user.email || stored?.user.email || "",
+        avatarUrl: user.avatarUrl || "",
+        createdAt: user.createdAt || stored?.user.createdAt || new Date().toISOString(),
+        roles: user.roles || stored?.user.roles || ["User"],
+      },
+      accessToken: refreshed.accessToken,
+      expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+    };
+    persistSession(session);
+    return clone(session);
+  } catch {
+    clearStoredSession();
+    return null;
+  }
 }
 
 export async function logoutUser(): Promise<void> {
-  await wait(90);
+  if (getNormalizedApiMode() === "mock") {
+    await wait(90);
+  } else {
+    try {
+      await fetchWithRetry<void>("/auth/logout", { method: "POST" });
+    } catch (error) {
+      reportError(error, { operation: "auth_logout", mode: getNormalizedApiMode() });
+    }
+  }
   clearStoredSession();
   void trackEvent({ name: "auth_logout" });
 }
