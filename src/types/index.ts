@@ -173,6 +173,32 @@ export interface FilterState {
   statusFilter: "all" | "todo" | "solved";
 }
 
+export interface WeeklyProgressPoint {
+  date: string;
+  label: string;
+  solved: number;
+}
+
+export interface TopicCoverage {
+  tag: string;
+  solved: number;
+  total: number;
+}
+
+export interface UserProgress {
+  weekly: WeeklyProgressPoint[];
+  currentStreak: number;
+  longestStreak: number;
+  topics: TopicCoverage[];
+}
+
+export interface LeaderboardEntry {
+  rank: number;
+  userId: string;
+  username: string;
+  solved: number;
+}
+
 export type CompetitionStatus = "upcoming" | "live" | "ended";
 
 export interface Competition {

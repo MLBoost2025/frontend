@@ -6,6 +6,7 @@ import {
   ContestRank,
   Difficulty,
   ExecutionMode,
+  LeaderboardEntry,
   LoginPayload,
   Problem,
   ProblemDetail,
@@ -16,6 +17,7 @@ import {
   SubmissionTestCaseResult,
   TopicProgressPoint,
   UserProfile,
+  UserProgress,
   UserStats,
 } from "@/types";
 import { AUTH_COOKIE_NAME, AUTH_COOKIE_TTL_SECONDS } from "@/lib/auth";
@@ -1710,6 +1712,113 @@ export async function fetchCompetitions(): Promise<Competition[]> {
     "fetch_competitions",
     () => liveFetchCompetitions(),
     () => mockFetchCompetitions()
+  );
+}
+
+const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+function dayStartMs(value: string | number): number {
+  const d = new Date(value);
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+}
+
+async function mockFetchUserProgress(): Promise<UserProgress> {
+  await wait(120);
+  const accepted = readSubmissionHistoryStore().filter(
+    (entry) => entry.mode === "submit" && entry.result.status === "Accepted"
+  );
+
+  const todayStart = dayStartMs(Date.now());
+  const weekly = Array.from({ length: 7 }, (_, i) => {
+    const start = todayStart - (6 - i) * HOUR_MS * 24;
+    const solved = new Set(
+      accepted.filter((e) => dayStartMs(e.createdAt) === start).map((e) => e.problemSlug)
+    );
+    return {
+      date: new Date(start).toISOString().slice(0, 10),
+      label: WEEKDAY_LABELS[new Date(start).getDay()],
+      solved: solved.size,
+    };
+  });
+
+  const activeDays = new Set(accepted.map((e) => dayStartMs(e.createdAt)));
+  let currentStreak = 0;
+  for (let day = todayStart; activeDays.has(day); day -= HOUR_MS * 24) currentStreak += 1;
+  let longestStreak = 0;
+  for (const day of activeDays) {
+    if (!activeDays.has(day - HOUR_MS * 24)) {
+      let run = 1;
+      let next = day + HOUR_MS * 24;
+      while (activeDays.has(next)) {
+        run += 1;
+        next += HOUR_MS * 24;
+      }
+      longestStreak = Math.max(longestStreak, run);
+    }
+  }
+
+  const solvedSlugs = new Set(accepted.map((e) => e.problemSlug));
+  const tagTotal = new Map<string, number>();
+  const tagSolved = new Map<string, number>();
+  for (const problem of MOCK_PROBLEMS) {
+    for (const tag of problem.tags) {
+      tagTotal.set(tag, (tagTotal.get(tag) || 0) + 1);
+      if (solvedSlugs.has(problem.slug)) tagSolved.set(tag, (tagSolved.get(tag) || 0) + 1);
+    }
+  }
+  const topics = [...tagTotal.entries()]
+    .map(([tag, total]) => ({ tag, total, solved: tagSolved.get(tag) || 0 }))
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 6);
+
+  return { weekly, currentStreak, longestStreak, topics };
+}
+
+async function liveFetchUserProgress(): Promise<UserProgress> {
+  const data = await fetchWithRetry<Partial<UserProgress>>("/users/me/progress", {
+    method: "GET",
+  });
+  return {
+    weekly: data.weekly ?? [],
+    currentStreak: data.currentStreak ?? 0,
+    longestStreak: data.longestStreak ?? 0,
+    topics: data.topics ?? [],
+  };
+}
+
+export async function fetchUserProgress(): Promise<UserProgress> {
+  return runWithBackendSwitch(
+    "fetch_user_progress",
+    () => liveFetchUserProgress(),
+    () => mockFetchUserProgress()
+  );
+}
+
+const MOCK_LEADERBOARD: LeaderboardEntry[] = [
+  { rank: 1, userId: "u-aarav", username: "Aarav", solved: 128 },
+  { rank: 2, userId: "u-emily", username: "Emily", solved: 121 },
+  { rank: 3, userId: "u-noah", username: "Noah", solved: 117 },
+  { rank: 4, userId: "u-saanvi", username: "Saanvi", solved: 110 },
+  { rank: 5, userId: "u-liam", username: "Liam", solved: 104 },
+];
+
+async function mockFetchLeaderboard(limit: number): Promise<LeaderboardEntry[]> {
+  await wait(120);
+  return clone(MOCK_LEADERBOARD).slice(0, limit);
+}
+
+async function liveFetchLeaderboard(limit: number): Promise<LeaderboardEntry[]> {
+  const data = await fetchWithRetry<LeaderboardEntry[]>(`/leaderboard?limit=${limit}`, {
+    method: "GET",
+  });
+  return Array.isArray(data) ? data : [];
+}
+
+export async function fetchLeaderboard(limit = 10): Promise<LeaderboardEntry[]> {
+  return runWithBackendSwitch(
+    "fetch_leaderboard",
+    () => liveFetchLeaderboard(limit),
+    () => mockFetchLeaderboard(limit)
   );
 }
 

@@ -1,8 +1,10 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 import {
   fetchCompetitions,
+  fetchLeaderboard,
   fetchRecentActivity,
   fetchSubmissionHistory,
+  fetchUserProgress,
   fetchUserStats,
   getCurrentSession,
   loginUser,
@@ -138,5 +140,23 @@ describe("mock api", () => {
     }
     expect(competitions.some((c) => c.status === "live")).toBe(true);
     expect(competitions.some((c) => c.status === "upcoming")).toBe(true);
+  });
+
+  it("returns a mock leaderboard", async () => {
+    const promise = fetchLeaderboard(3);
+    await vi.runAllTimersAsync();
+    const board = await promise;
+    expect(board).toHaveLength(3);
+    expect(board[0].rank).toBe(1);
+    expect(board[0].solved).toBeGreaterThan(0);
+  });
+
+  it("returns a 7-day progress week from mock history", async () => {
+    const promise = fetchUserProgress();
+    await vi.runAllTimersAsync();
+    const progress = await promise;
+    expect(progress.weekly).toHaveLength(7);
+    expect(progress.currentStreak).toBeGreaterThanOrEqual(0);
+    expect(Array.isArray(progress.topics)).toBe(true);
   });
 });
