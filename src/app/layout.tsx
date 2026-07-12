@@ -20,6 +20,10 @@ const spaceMono = Space_Mono({
 export const metadata: Metadata = {
   title: "MLBoost",
   description: "Interactive ML coding practice platform",
+  icons: {
+    icon: "/brand/mlboost-mark.svg",
+    shortcut: "/brand/mlboost-mark.svg",
+  },
 };
 
 export default function RootLayout({
