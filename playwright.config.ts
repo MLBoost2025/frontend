@@ -27,5 +27,12 @@ export default defineConfig({
     url: "http://127.0.0.1:4173/login",
     reuseExistingServer: !process.env.CI,
     timeout: 180_000,
+    // Browser coverage exercises the deterministic mock product flow. This also
+    // keeps a developer's local live-stack `.env.local` from changing CI behavior.
+    env: {
+      ...process.env,
+      NEXT_PUBLIC_API_MODE: "mock",
+      NEXT_PUBLIC_API_FALLBACK_TO_MOCK: "true",
+    },
   },
 });
