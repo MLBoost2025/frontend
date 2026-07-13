@@ -17,7 +17,7 @@ Built with Next.js 16 (App Router) and React 19.
 
 ## Getting started
 
-Requirements: Node 20+.
+Requirements: Node 24.
 
 ```bash
 npm install
@@ -35,14 +35,15 @@ See [.env.example](.env.example) for all variables. Key ones:
 | Variable | Purpose |
 |----------|---------|
 | `NEXT_PUBLIC_API_MODE` | `mock` (in-file data, default), `live` (real backend), or `auto` |
-| `NEXT_PUBLIC_API_URL` | Base URL of the backend API in live/auto mode |
+| `BACKEND_API_URL` | Server-only private backend base URL used by the same-origin BFF |
+| `NEXT_PUBLIC_SITE_URL` | Canonical public HTTPS origin |
 | `NEXT_PUBLIC_API_FALLBACK_TO_MOCK` | In live mode, fall back to mock on API error. Set `false` in production so failures surface |
 | `NEXT_PUBLIC_SENTRY_DSN` / `SENTRY_DSN` | Sentry client / server DSNs (capture is off unless set) |
 
 **Mock vs live:** every data call goes through a switch in
 [`src/lib/api.ts`](src/lib/api.ts). In `mock` mode it returns bundled sample
 data so the UI is fully usable offline. In `live`/`auto` mode it calls the
-backend (attaching the stored bearer token) and, unless
+same-origin `/api` BFF with Secure/HttpOnly cookies and, unless
 `NEXT_PUBLIC_API_FALLBACK_TO_MOCK=false`, falls back to mock data on error.
 
 ## Scripts
@@ -62,11 +63,12 @@ backend (attaching the stored bearer token) and, unless
 ```
 src/
   app/                 App Router routes (dashboard, problems, arena, profile, ...)
+    api/[...path]/      same-origin private-backend BFF
     problems/[slug]/   the solve "arena" (Monaco editor, run/submit, history)
     components/        shared UI (Navbar, Sidebar, ThemeSwitcher, ...)
   lib/api.ts           data layer with the mock/live switch
   context/AuthContext  auth state
-  middleware.ts        route gating on the auth cookie
+  proxy.ts             route gating through backend Session validation
 ```
 
 ## Testing
@@ -82,5 +84,6 @@ then e2e against a production build.
 ## Deploy
 
 Optimized for [Vercel](https://vercel.com/). Set the production env vars
-(`NEXT_PUBLIC_API_MODE=live`, a real `NEXT_PUBLIC_API_URL`, Sentry DSNs) in the
+(`NEXT_PUBLIC_API_MODE=live`, `BACKEND_API_URL`, `NEXT_PUBLIC_SITE_URL`, mock
+fallback disabled, and Sentry DSNs) in the
 project settings before deploying.
