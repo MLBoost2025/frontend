@@ -3,9 +3,8 @@ interface BrandMarkProps {
 }
 
 /**
- * The MLBoost Ensemble Spark: three weak learner signals converge into one
- * amplified result. The custom geometry is intentionally simple enough to
- * remain recognizable at favicon size.
+ * The Katalume Ensemble Spark: deliberate practice paths converge into an
+ * illuminated result. The custom geometry remains recognizable at favicon size.
  */
 export default function BrandMark({ className = "h-9 w-9" }: BrandMarkProps) {
   return (

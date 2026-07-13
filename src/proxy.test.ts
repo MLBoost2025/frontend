@@ -11,7 +11,7 @@ describe("session proxy", () => {
   it("keeps the local mock cookie gate for standalone mode", async () => {
     vi.stubEnv("NEXT_PUBLIC_API_MODE", "mock");
     const request = new NextRequest("http://localhost:3000/problems", {
-      headers: { cookie: "mlboost_auth=1" },
+      headers: { cookie: "katalume_auth=1" },
     });
     expect(await isAuthenticated(request)).toBe(true);
   });
@@ -20,7 +20,7 @@ describe("session proxy", () => {
     vi.stubEnv("NEXT_PUBLIC_API_MODE", "live");
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(null, { status: 401 })));
     const request = new NextRequest("http://localhost:3000/profile", {
-      headers: { cookie: "mlboost_auth=1" },
+      headers: { cookie: "katalume_auth=1" },
     });
 
     const response = await proxy(request);
@@ -33,14 +33,14 @@ describe("session proxy", () => {
     const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 200 }));
     vi.stubGlobal("fetch", fetchMock);
     const request = new NextRequest("http://localhost:3000/problems", {
-      headers: { cookie: "mlboost_session=signed-token" },
+      headers: { cookie: "katalume_session=signed-token" },
     });
 
     const response = await proxy(request);
     expect(response.status).toBe(200);
     expect(fetchMock).toHaveBeenCalledWith(
       "http://localhost:5001/api/auth/session",
-      expect.objectContaining({ headers: { cookie: "mlboost_session=signed-token" } })
+      expect.objectContaining({ headers: { cookie: "katalume_session=signed-token" } })
     );
   });
 });

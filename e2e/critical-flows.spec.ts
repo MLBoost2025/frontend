@@ -16,14 +16,14 @@ const adminSession = {
 async function startAsMockAdmin(page: import("@playwright/test").Page) {
   await page.context().addCookies([
     {
-      name: "mlboost_auth",
+      name: "katalume_auth",
       value: "1",
       url: "http://127.0.0.1:4173",
       sameSite: "Lax",
     },
   ]);
   await page.addInitScript((session) => {
-    localStorage.setItem("mlboost.mock.session", JSON.stringify(session));
+    localStorage.setItem("katalume.mock.session", JSON.stringify(session));
     localStorage.setItem("accessToken", session.accessToken);
   }, adminSession);
 }

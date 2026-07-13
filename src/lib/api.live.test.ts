@@ -33,7 +33,7 @@ describe("live API contract", () => {
 
     expect(session.user.name).toBe("Alice");
     expect(window.localStorage.getItem("accessToken")).toBeNull();
-    expect(window.localStorage.getItem("mlboost.mock.session")).toBeNull();
+    expect(window.localStorage.getItem("katalume.mock.session")).toBeNull();
     expect(fetchMock).toHaveBeenCalledWith(
       "https://api.example.test/api/auth/login",
       expect.objectContaining({ credentials: "include" })

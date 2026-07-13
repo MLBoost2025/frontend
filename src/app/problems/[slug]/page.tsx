@@ -40,7 +40,7 @@ const MonacoEditor = dynamic(
 );
 
 function getDraftStorageKey(slug: string): string {
-  return `mlboost:draft:${slug}`;
+  return `katalume:draft:${slug}`;
 }
 
 function formatSubmissionDate(value: string): string {

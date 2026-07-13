@@ -1,9 +1,13 @@
-# MLBoost frontend
+# Katalume frontend
 
-The web app for **MLBoost** — an interactive platform for practicing machine
-learning and data science, think **LeetCode meets Kaggle** for ML students.
-Browse problems, solve them in an in-browser code editor, run and submit against
-test cases, follow interview tracks, and track your progress.
+**Practice machine learning into mastery.**
+
+Katalume is the training ground for machine learning — solve real ML problems
+in an in-browser judge, compete in contests, and climb to mastery. LeetCode
+rigor meets Kaggle depth.
+
+The name combines **kata**, deliberate practice that forges mastery, with
+**lume**, light or illumination—the moment a hard problem clicks.
 
 Built with Next.js 16 (App Router) and React 19.
 

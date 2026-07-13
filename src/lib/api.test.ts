@@ -17,7 +17,7 @@ describe("mock api", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     window.localStorage.clear();
-    document.cookie = "mlboost_auth=; path=/; max-age=0";
+    document.cookie = "katalume_auth=; path=/; max-age=0";
   });
 
   afterEach(() => {

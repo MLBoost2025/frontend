@@ -84,7 +84,7 @@ export default function Sidebar({
             <BrandMark />
             <div className="leading-none">
               <span className="block text-[15px] font-bold tracking-tight text-zinc-900 dark:text-white">
-                MLBoost
+                Katalume
               </span>
               <span className="block text-[10px] font-medium uppercase tracking-[0.16em] text-zinc-400 dark:text-zinc-500">
                 ML Arena
