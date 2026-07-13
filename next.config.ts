@@ -1,9 +1,12 @@
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 
-if (process.env.VERCEL_ENV === "production") {
+// A production deploy is only required to be fully wired to a backend when it is
+// actually serving live data. A mock-mode deploy is a self-contained demo (all
+// data, sign-up and sign-in run against bundled sample data) and needs no backend,
+// so it is allowed to build without backend credentials.
+if (process.env.VERCEL_ENV === "production" && process.env.NEXT_PUBLIC_API_MODE === "live") {
   const errors: string[] = [];
-  if (process.env.NEXT_PUBLIC_API_MODE !== "live") errors.push("NEXT_PUBLIC_API_MODE must be live");
   if (process.env.NEXT_PUBLIC_API_FALLBACK_TO_MOCK !== "false") errors.push("mock fallback must be disabled");
   for (const key of ["BACKEND_API_URL", "NEXT_PUBLIC_SITE_URL"]) {
     try {
