@@ -15,6 +15,7 @@ import {
   X,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import BrandMark from "./BrandMark";
 
 interface SidebarProps {
   selectedCategory?: string;
@@ -80,10 +81,7 @@ export default function Sidebar({
         {/* Brand */}
         <div className="flex h-16 items-center justify-between px-4">
           <Link href="/" className="group flex items-center gap-2.5">
-            <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-400 to-brand-900 font-display text-[12px] font-bold tracking-tight text-white shadow-[0_4px_14px_-4px_rgba(80,80,129,0.58)]">
-              ML
-              <span className="absolute inset-0 rounded-xl ring-1 ring-inset ring-white/25" />
-            </div>
+            <BrandMark />
             <div className="leading-none">
               <span className="block text-[15px] font-bold tracking-tight text-zinc-900 dark:text-white">
                 MLBoost

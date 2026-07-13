@@ -90,7 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     () => ({
       user: session?.user ?? null,
       session,
-      isAuthenticated: Boolean(session?.accessToken),
+      isAuthenticated: Boolean(session?.user),
       isAdmin: Boolean(session?.user?.roles?.includes("Admin")),
       isLoading,
       login,

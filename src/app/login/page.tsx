@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import ThemeSwitcher from "@/app/components/ThemeSwitcher";
+import BrandMark from "@/app/components/BrandMark";
 
 type AuthMode = "login" | "signup";
 
@@ -76,10 +77,7 @@ function LoginForm() {
       </div>
       <div className="w-full max-w-md">
         <div className="mb-6 flex items-center justify-center gap-2.5">
-          <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-brand-400 to-brand-900 font-display text-xs font-bold text-white shadow-[0_6px_20px_-6px_rgba(80,80,129,0.6)]">
-            ML
-            <span className="absolute inset-0 rounded-xl ring-1 ring-inset ring-white/25" />
-          </div>
+          <BrandMark className="h-10 w-10" />
           <span className="text-lg font-bold tracking-tight text-zinc-900 dark:text-white">
             MLBoost
           </span>

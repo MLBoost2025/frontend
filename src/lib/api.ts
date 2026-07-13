@@ -34,15 +34,17 @@ import { reportError, reportMessage } from "@/lib/observability";
 
 type ApiMode = "mock" | "live" | "auto";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api";
-const API_MODE = ((process.env.NEXT_PUBLIC_API_MODE || "mock").toLowerCase() ||
-  "mock") as ApiMode;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
+const DEFAULT_API_MODE = process.env.NODE_ENV === "production" ? "live" : "mock";
+const API_MODE = ((process.env.NEXT_PUBLIC_API_MODE || DEFAULT_API_MODE).toLowerCase() ||
+  DEFAULT_API_MODE) as ApiMode;
 const API_RETRY_COUNT = Number(process.env.NEXT_PUBLIC_API_RETRY_COUNT || 2);
 const API_TIMEOUT_MS = Number(process.env.NEXT_PUBLIC_API_TIMEOUT_MS || 8000);
-const ALLOW_MOCK_FALLBACK = process.env.NEXT_PUBLIC_API_FALLBACK_TO_MOCK !== "false";
+const ALLOW_MOCK_FALLBACK = process.env.NEXT_PUBLIC_API_FALLBACK_TO_MOCK
+  ? process.env.NEXT_PUBLIC_API_FALLBACK_TO_MOCK === "true"
+  : process.env.NODE_ENV !== "production";
 
 const MOCK_SESSION_KEY = "mlboost.mock.session";
-const ACCESS_TOKEN_KEY = "accessToken";
 const SUBMISSION_HISTORY_KEY = "mlboost.submission.history";
 
 const SUBMIT_DELAY_MS = 2000;
@@ -476,7 +478,7 @@ function getNormalizedApiMode(): ApiMode {
   if (API_MODE === "mock" || API_MODE === "live" || API_MODE === "auto") {
     return API_MODE;
   }
-  return "mock";
+  return DEFAULT_API_MODE as ApiMode;
 }
 
 export function getBackendMode(): ApiMode {
@@ -487,11 +489,11 @@ function persistSession(session: AuthSession): void {
   if (!isBrowser()) {
     return;
   }
-  window.localStorage.setItem(MOCK_SESSION_KEY, JSON.stringify(session));
-  window.localStorage.setItem(ACCESS_TOKEN_KEY, session.accessToken);
   if (getNormalizedApiMode() === "mock") {
+    window.localStorage.setItem(MOCK_SESSION_KEY, JSON.stringify(session));
     window.document.cookie = `${AUTH_COOKIE_NAME}=1; path=/; max-age=${AUTH_COOKIE_TTL_SECONDS}; samesite=lax`;
   } else {
+    window.localStorage.removeItem(MOCK_SESSION_KEY);
     window.document.cookie = `${AUTH_COOKIE_NAME}=; path=/; max-age=0; samesite=lax`;
   }
 }
@@ -506,7 +508,6 @@ function readStoredSession(): AuthSession | null {
 
   if (getNormalizedApiMode() === "mock" && !hasMockAuthCookie) {
     window.localStorage.removeItem(MOCK_SESSION_KEY);
-    window.localStorage.removeItem(ACCESS_TOKEN_KEY);
     return null;
   }
 
@@ -528,15 +529,7 @@ function clearStoredSession(): void {
     return;
   }
   window.localStorage.removeItem(MOCK_SESSION_KEY);
-  window.localStorage.removeItem(ACCESS_TOKEN_KEY);
   window.document.cookie = `${AUTH_COOKIE_NAME}=; path=/; max-age=0; samesite=lax`;
-}
-
-function getStoredAccessToken(): string | null {
-  if (!isBrowser()) {
-    return null;
-  }
-  return window.localStorage.getItem(ACCESS_TOKEN_KEY);
 }
 
 function createMockSession(name: string, email: string): AuthSession {
@@ -869,14 +862,9 @@ async function fetchWithRetry<T>(
   const isIdempotent = method === "GET" || method === "HEAD";
   const maxRetries = isIdempotent ? retries : 0;
 
-  // Attach the bearer token so live API calls are authenticated.
-  const token = getStoredAccessToken();
-  const authHeaders: Record<string, string> = token
-    ? { Authorization: `Bearer ${token}` }
-    : {};
-
   let attempt = 0;
   let lastError: unknown;
+  let refreshedSession = false;
 
   while (attempt <= maxRetries) {
     const controller = new AbortController();
@@ -889,12 +877,26 @@ async function fetchWithRetry<T>(
         credentials: "include",
         headers: {
           "Content-Type": "application/json",
-          ...authHeaders,
           ...(init?.headers || {}),
         },
       });
 
       clearTimeout(timeoutId);
+
+      if (
+        (response.status === 401 || response.status === 403) &&
+        !refreshedSession &&
+        !path.startsWith("/auth/") &&
+        getNormalizedApiMode() !== "mock"
+      ) {
+        refreshedSession = true;
+        const refreshed = await fetch(`${API_BASE_URL}/auth/refresh`, {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+        });
+        if (refreshed.ok) continue;
+      }
 
       if (!response.ok) {
         const message = await response.text();
@@ -966,7 +968,6 @@ function toAuthSessionFromLive(
     user?: Partial<AuthSession["user"]> & { username?: string };
   };
 
-  const token = parsed.accessToken || parsed.token || `live_${Date.now()}`;
   const now = new Date();
 
   return {
@@ -978,7 +979,6 @@ function toAuthSessionFromLive(
       createdAt: parsed.user?.createdAt || now.toISOString(),
       roles: parsed.user?.roles || ["User"],
     },
-    accessToken: token,
     expiresAt:
       parsed.expiresAt || new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(),
   };
@@ -1035,6 +1035,14 @@ function normalizeLiveSubmission(
 ): SubmissionResult {
   const parsed = payload as Partial<SubmissionResult> & {
     status?: SubmissionResult["status"] | string;
+    _id?: string;
+    id?: string;
+    runtime?: number;
+    memory?: number;
+    errorMessage?: string;
+    stderr?: string;
+    compileOutput?: string;
+    stdout?: string;
   };
 
   const testCases: SubmissionTestCaseResult[] = (parsed.testCases || []).map((item) => ({
@@ -1047,28 +1055,25 @@ function normalizeLiveSubmission(
     errorMessage: item.errorMessage,
   }));
 
-  const totalCount = parsed.totalCount ?? testCases.length;
+  const accepted = parsed.status === "Accepted";
+  const totalCount = parsed.totalCount ?? (testCases.length || 1);
   const passedCount =
-    parsed.passedCount ?? testCases.filter((testCase) => testCase.passed).length;
+    parsed.passedCount ?? (testCases.length ? testCases.filter((testCase) => testCase.passed).length : accepted ? 1 : 0);
+  const executionError = /runtime|compilation|internal|limit|error/i.test(parsed.status || "");
 
   return {
-    submissionId: parsed.submissionId || `sub_live_${Date.now()}`,
+    submissionId: parsed.submissionId || parsed._id || parsed.id || `sub_live_${Date.now()}`,
     problemId,
     mode,
     visibility: parsed.visibility || (mode === "run" ? "sample" : "hidden"),
-    status:
-      parsed.status === "Accepted" ||
-      parsed.status === "Failed" ||
-      parsed.status === "Runtime Error"
-        ? parsed.status
-        : "Failed",
-    runtimeMs: parsed.runtimeMs ?? 0,
-    memoryMb: parsed.memoryMb ?? 0,
+    status: accepted ? "Accepted" : executionError ? "Runtime Error" : "Failed",
+    runtimeMs: parsed.runtimeMs ?? Math.round(Number(parsed.runtime || 0) * 1000),
+    memoryMb: parsed.memoryMb ?? Number(parsed.memory || 0) / 1024,
     score: parsed.score ?? Math.round((passedCount / Math.max(1, totalCount)) * 100),
-    message: parsed.message || "Execution completed.",
+    message: parsed.message || (accepted ? "Execution accepted." : parsed.status || "Execution completed."),
     passedCount,
     totalCount,
-    traceback: parsed.traceback,
+    traceback: parsed.traceback || parsed.errorMessage || parsed.stderr || parsed.compileOutput,
     testCases,
     source: "live",
     submittedAt: parsed.submittedAt || new Date().toISOString(),
@@ -1106,20 +1111,39 @@ async function mockExecute(problemId: string, code: string, mode: ExecutionMode)
   return createSubmissionResult(problemId, code, mode, "mock");
 }
 
-async function liveExecute(problemId: string, code: string, mode: ExecutionMode) {
-  const endpoint = mode === "run" ? "/submissions/run" : "/submissions";
-  const data = await fetchWithRetry<unknown>(endpoint, {
-    method: "POST",
-    body: JSON.stringify({
-      problemId,
-      code,
-      language: "python",
-      languageId: 71,
-      mode,
-    }),
-  });
+async function liveExecute(problemId: string, code: string, mode: ExecutionMode, contestId?: string) {
+  if (mode === "run") {
+    const queued = await fetchWithRetry<{ id: string; status: string }>("/runner/run", {
+      method: "POST",
+      body: JSON.stringify({ problemId, code, languageId: 71, customInput: "" }),
+    });
+    const completed = await pollEvaluation<{ status: string; result?: unknown; error?: string }>(
+      `/runner/jobs/${queued.id}`
+    );
+    if (!completed.result) throw new Error(completed.error || "Run evaluation failed");
+    return normalizeLiveSubmission(problemId, mode, completed.result);
+  }
 
-  return normalizeLiveSubmission(problemId, mode, data);
+  const idempotencyKey = crypto.randomUUID();
+  const queued = await fetchWithRetry<{ _id: string; status: string }>("/submissions", {
+    method: "POST",
+    headers: { "Idempotency-Key": idempotencyKey },
+    body: JSON.stringify({ problemId, code, languageId: 71, ...(contestId ? { contestId } : {}) }),
+  });
+  const completed = await pollEvaluation<{ _id: string; status: string; runtime?: number; memory?: number; errorMessage?: string }>(
+    `/submissions/${queued._id}`
+  );
+  return normalizeLiveSubmission(problemId, mode, completed);
+}
+
+async function pollEvaluation<T extends { status: string }>(path: string): Promise<T> {
+  const deadline = Date.now() + 120000;
+  while (Date.now() < deadline) {
+    const state = await fetchWithRetry<T>(path, { method: "GET" });
+    if (!["queued", "processing", "Queued", "Processing"].includes(state.status)) return state;
+    await wait(500);
+  }
+  throw new Error("Evaluation timed out. The job remains available in submission history.");
 }
 
 async function persistExecutionRecord(
@@ -1361,20 +1385,17 @@ export async function getCurrentSession(): Promise<AuthSession | null> {
       clearStoredSession();
       return null;
     }
-    const refreshed = await fetchWithRetry<{ accessToken: string }>("/auth/refresh", { method: "POST" });
-    const stored = readStoredSession();
     const user = sessionState.user;
     const session: AuthSession = {
       user: {
-        id: user.id || user._id || stored?.user.id || "",
-        name: user.username || stored?.user.name || "User",
-        email: user.email || stored?.user.email || "",
+        id: user.id || user._id || "",
+        name: user.username || "User",
+        email: user.email || "",
         avatarUrl: user.avatarUrl || "",
-        createdAt: user.createdAt || stored?.user.createdAt || new Date().toISOString(),
-        roles: user.roles || stored?.user.roles || ["User"],
+        createdAt: user.createdAt || new Date().toISOString(),
+        roles: user.roles || ["User"],
       },
-      accessToken: refreshed.accessToken,
-      expiresAt: new Date(Date.now() + 15 * 60 * 1000).toISOString(),
+      expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
     };
     persistSession(session);
     return clone(session);
@@ -1447,7 +1468,8 @@ export async function submitSolution(
   _languageId = 71,
   _token?: string,
   _problemSlug?: string,
-  _problemTitle?: string
+  _problemTitle?: string,
+  contestId?: string
 ): Promise<SubmissionResult> {
   void _languageId;
   void _token;
@@ -1455,7 +1477,7 @@ export async function submitSolution(
   void _problemTitle;
 
   const mockExecutor = async () => mockExecute(problemId, code, "submit");
-  const liveExecutor = async () => liveExecute(problemId, code, "submit");
+  const liveExecutor = async () => liveExecute(problemId, code, "submit", contestId);
 
   const result = await runWithBackendSwitch("submit_code", liveExecutor, mockExecutor);
   await persistExecutionRecord(problemId, code, "submit", result);
@@ -1757,6 +1779,7 @@ interface LiveContest {
   participantCount?: number;
   problemCount?: number;
   problems?: Array<{ _id?: string; id?: string; slug?: string; title?: string; difficulty?: Difficulty }>;
+  isRegistered?: boolean;
 }
 
 function toCompetitionFromLive(raw: LiveContest): Competition {
@@ -1845,6 +1868,7 @@ export async function fetchCompetitionById(id: string): Promise<CompetitionDetai
           title: problem.title || "Untitled Problem",
           difficulty: toDifficulty(problem.difficulty),
         })),
+        isRegistered: raw.isRegistered,
       };
     },
     async () => {

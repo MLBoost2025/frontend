@@ -5,7 +5,6 @@ import {
   ArrowRight,
   BarChart3,
   BookOpen,
-  Github,
   Play,
   ShieldCheck,
   Sparkles,
@@ -13,6 +12,7 @@ import {
   Trophy,
 } from "lucide-react";
 import ThemeSwitcher from "./ThemeSwitcher";
+import BrandMark from "./BrandMark";
 
 const FEATURES = [
   {
@@ -59,10 +59,7 @@ export default function Landing() {
       {/* Top nav */}
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-5">
         <div className="flex items-center gap-2.5">
-          <div className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-brand-400 to-brand-900 font-display text-[12px] font-bold text-white shadow-[0_4px_14px_-4px_rgba(80,80,129,0.58)]">
-            ML
-            <span className="absolute inset-0 rounded-xl ring-1 ring-inset ring-white/25" />
-          </div>
+          <BrandMark />
           <span className="text-[17px] font-bold tracking-tight text-zinc-900 dark:text-white">
             MLBoost
           </span>
@@ -222,14 +219,8 @@ export default function Landing() {
       </main>
 
       {/* Footer */}
-      <footer className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-3 border-t border-black/[0.05] px-5 py-6 text-xs text-zinc-400 dark:border-white/[0.06] sm:flex-row">
+      <footer className="mx-auto flex w-full max-w-6xl flex-col items-center justify-center gap-3 border-t border-black/[0.05] px-5 py-6 text-xs text-zinc-400 dark:border-white/[0.06] sm:flex-row">
         <span>© {`${new Date().getFullYear()}`} MLBoost — practice ML, the right way.</span>
-        <a
-          href="https://github.com/MLBoost2025"
-          className="inline-flex items-center gap-1.5 transition hover:text-zinc-600 dark:hover:text-zinc-200"
-        >
-          <Github className="h-3.5 w-3.5" /> MLBoost2025
-        </a>
       </footer>
     </div>
   );

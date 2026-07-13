@@ -1,18 +1,63 @@
 import type { NextConfig } from "next";
 import { withSentryConfig } from "@sentry/nextjs";
 
+if (process.env.VERCEL_ENV === "production") {
+  const errors: string[] = [];
+  if (process.env.NEXT_PUBLIC_API_MODE !== "live") errors.push("NEXT_PUBLIC_API_MODE must be live");
+  if (process.env.NEXT_PUBLIC_API_FALLBACK_TO_MOCK !== "false") errors.push("mock fallback must be disabled");
+  for (const key of ["BACKEND_API_URL", "NEXT_PUBLIC_SITE_URL"]) {
+    try {
+      const value = process.env[key];
+      if (!value || new URL(value).protocol !== "https:") errors.push(`${key} must be an HTTPS URL`);
+    } catch {
+      errors.push(`${key} must be a valid HTTPS URL`);
+    }
+  }
+  if (errors.length) throw new Error(`Unsafe production configuration: ${errors.join("; ")}`);
+}
+
+const apiOrigin = (() => {
+  try { return process.env.NEXT_PUBLIC_API_URL ? new URL(process.env.NEXT_PUBLIC_API_URL).origin : ""; }
+  catch { return ""; }
+})();
+
+const contentSecurityPolicy = [
+  "default-src 'self'",
+  "base-uri 'self'",
+  "object-src 'none'",
+  "frame-ancestors 'none'",
+  "form-action 'self'",
+  "img-src 'self' data: blob:",
+  "font-src 'self' data:",
+  "style-src 'self' 'unsafe-inline'",
+  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "production" ? "" : " 'unsafe-eval'"}`,
+  `connect-src 'self'${apiOrigin ? ` ${apiOrigin}` : ""} https://*.ingest.sentry.io`,
+  "worker-src 'self' blob:",
+  ...(process.env.NODE_ENV === "production" ? ["upgrade-insecure-requests"] : []),
+].join("; ");
+
+const securityHeaders = [
+  { key: "Content-Security-Policy", value: contentSecurityPolicy },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "X-Frame-Options", value: "DENY" },
+  { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), payment=()" },
+  ...(process.env.NODE_ENV === "production"
+    ? [{ key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" }]
+    : []),
+];
+
 const nextConfig: NextConfig = {
-  /* config options here */
   reactCompiler: true,
+  output: "standalone",
+  poweredByHeader: false,
   allowedDevOrigins: ["127.0.0.1"],
-  turbopack: {
-    root: __dirname,
+  turbopack: { root: __dirname },
+  async headers() {
+    return [{ source: "/(.*)", headers: securityHeaders }];
   },
 };
 
-// Wrap with Sentry for source-map upload, releases, and the ad-blocker tunnel.
-// Upload only happens when SENTRY_AUTH_TOKEN/org/project are set (e.g. in CI);
-// local/dev builds are unaffected.
 export default withSentryConfig(nextConfig, {
   org: process.env.SENTRY_ORG,
   project: process.env.SENTRY_PROJECT,

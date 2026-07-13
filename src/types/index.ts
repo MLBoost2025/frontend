@@ -89,7 +89,8 @@ export interface NewLearningTrackInput {
 
 export interface AuthSession {
   user: User;
-  accessToken: string;
+  /** Present only for the isolated mock adapter; live auth uses httpOnly cookies. */
+  accessToken?: string;
   expiresAt: string;
 }
 
@@ -262,6 +263,7 @@ export interface ContestProblem {
 
 export interface CompetitionDetail extends Competition {
   problems: ContestProblem[];
+  isRegistered?: boolean;
 }
 
 export interface ContestLeaderboardEntry {

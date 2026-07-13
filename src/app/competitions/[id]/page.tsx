@@ -34,7 +34,7 @@ export default function CompetitionDetailPage() {
     let active = true;
     Promise.all([fetchCompetitionById(params.id), fetchContestLeaderboard(params.id)])
       .then(([detail, entries]) => {
-        if (active) { setContest(detail); setLeaderboard(entries); }
+        if (active) { setContest(detail); setRegistered(Boolean(detail.isRegistered)); setLeaderboard(entries); }
       })
       .catch((reason) => { if (active) setError(reason instanceof Error ? reason.message : "Could not load contest."); })
       .finally(() => { if (active) setLoading(false); });
@@ -81,7 +81,7 @@ export default function CompetitionDetailPage() {
               <p className="eyebrow">Problems</p>
               <div className="mt-4 space-y-3">
                 {contest.problems.length === 0 ? <p className="text-sm text-zinc-500">Problems will appear when the contest opens.</p> : contest.problems.map((problem, index) => (
-                  <Link key={problem.id} href={`/problems/${problem.slug}`} className="flex items-center justify-between rounded-2xl bg-zinc-100/70 p-4 transition hover:bg-brand-50 dark:bg-white/[0.04] dark:hover:bg-brand-500/[0.08]">
+                  <Link key={problem.id} href={`/problems/${problem.slug}?contest=${encodeURIComponent(contest.id)}`} className="flex items-center justify-between rounded-2xl bg-zinc-100/70 p-4 transition hover:bg-brand-50 dark:bg-white/[0.04] dark:hover:bg-brand-500/[0.08]">
                     <span className="font-semibold text-zinc-900 dark:text-zinc-100">{index + 1}. {problem.title}</span>
                     <span className={`rounded-full px-3 py-1 text-xs font-semibold ${difficultyClass(problem.difficulty)}`}>{problem.difficulty}</span>
                   </Link>

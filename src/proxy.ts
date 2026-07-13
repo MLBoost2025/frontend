@@ -3,7 +3,7 @@ import { AUTH_COOKIE_NAME } from "./lib/auth";
 
 export async function isAuthenticated(request: NextRequest): Promise<boolean> {
   const apiMode = (process.env.NEXT_PUBLIC_API_MODE || "mock").toLowerCase();
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api";
+  const apiBaseUrl = process.env.BACKEND_API_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api";
   if (apiMode === "mock") {
     return request.cookies.has(AUTH_COOKIE_NAME);
   }
