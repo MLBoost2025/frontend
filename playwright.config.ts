@@ -20,12 +20,12 @@ export default defineConfig({
     },
   ],
   webServer: {
-    // In CI, exercise the production bundle; locally use the dev server.
-    command: process.env.CI
-      ? "npm run build && npm run start -- --port 4173"
-      : "npm run dev -- --port 4173",
+    // Always exercise the production bundle. Running several browser journeys
+    // against the dev compiler can make navigation assertions race route
+    // compilation and does not represent the artifact we ship.
+    command: "npm run build && npm run start -- --port 4173",
     url: "http://127.0.0.1:4173/login",
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 180_000,
     // Browser coverage exercises the deterministic mock product flow. This also
     // keeps a developer's local live-stack `.env.local` from changing CI behavior.

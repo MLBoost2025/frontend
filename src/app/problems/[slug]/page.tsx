@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useTheme } from "next-themes";
 import { Group, Panel, Separator } from "react-resizable-panels";
 import {
@@ -200,6 +200,8 @@ function ResultView({ result }: { result: SubmissionResult | null }) {
 export default function ProblemArenaPage() {
   const router = useRouter();
   const params = useParams<{ slug: string }>();
+  const searchParams = useSearchParams();
+  const contestId = searchParams.get("contest") || undefined;
   const { resolvedTheme } = useTheme();
   const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
 
@@ -392,13 +394,16 @@ export default function ProblemArenaPage() {
           71,
           undefined,
           problem.slug,
-          problem.title
+          problem.title,
+          contestId
         );
         setSubmitResult(result);
         setActiveConsoleTab("hidden");
 
         if (result.status === "Accepted") {
           setIsEditorialUnlocked(true);
+          const unlockedProblem = await fetchProblemBySlug(problem.slug);
+          setProblem(unlockedProblem);
           void trackEvent({
             name: "editorial_unlocked",
             payload: { problemId: problem.id, slug: problem.slug },
@@ -433,7 +438,7 @@ export default function ProblemArenaPage() {
         setIsSubmitting(false);
       }
     },
-    [problem, isExecuting, refreshHistory]
+    [problem, isExecuting, refreshHistory, contestId]
   );
 
   useEffect(() => {

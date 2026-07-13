@@ -5,7 +5,6 @@ import {
   ArrowRight,
   BarChart3,
   BookOpen,
-  Github,
   Play,
   ShieldCheck,
   Sparkles,
@@ -220,14 +219,8 @@ export default function Landing() {
       </main>
 
       {/* Footer */}
-      <footer className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-3 border-t border-black/[0.05] px-5 py-6 text-xs text-zinc-400 dark:border-white/[0.06] sm:flex-row">
+      <footer className="mx-auto flex w-full max-w-6xl flex-col items-center justify-center gap-3 border-t border-black/[0.05] px-5 py-6 text-xs text-zinc-400 dark:border-white/[0.06] sm:flex-row">
         <span>© {`${new Date().getFullYear()}`} MLBoost — practice ML, the right way.</span>
-        <a
-          href="https://github.com/MLBoost2025"
-          className="inline-flex items-center gap-1.5 transition hover:text-zinc-600 dark:hover:text-zinc-200"
-        >
-          <Github className="h-3.5 w-3.5" /> MLBoost2025
-        </a>
       </footer>
     </div>
   );

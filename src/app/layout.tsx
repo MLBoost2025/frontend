@@ -18,8 +18,20 @@ const spaceMono = Space_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MLBoost",
-  description: "Interactive ML coding practice platform",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
+  title: { default: "MLBoost — Practice machine learning by building", template: "%s | MLBoost" },
+  description: "Practice production-minded machine learning through focused coding problems, learning tracks, and competitions.",
+  applicationName: "MLBoost",
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    siteName: "MLBoost",
+    title: "MLBoost — Practice machine learning by building",
+    description: "Focused ML coding problems, learning tracks, and competitions.",
+    url: "/",
+  },
+  twitter: { card: "summary", title: "MLBoost", description: "Practice machine learning by building." },
+  robots: { index: true, follow: true },
   icons: {
     icon: "/brand/mlboost-mark.svg",
     shortcut: "/brand/mlboost-mark.svg",
