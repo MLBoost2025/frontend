@@ -11,7 +11,7 @@ function request(origin: string, body = "{}") {
       host: "app.example.com",
       "x-forwarded-proto": "https",
       "content-type": "application/json",
-      cookie: "mlboost_session=session",
+      cookie: "katalume_session=session",
     }),
     nextUrl,
     arrayBuffer: async () => new TextEncoder().encode(body).buffer,

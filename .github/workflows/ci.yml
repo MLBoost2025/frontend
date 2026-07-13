@@ -47,7 +47,7 @@ jobs:
         run: npm run audit:production
 
       - name: Build production container
-        run: docker build --tag mlboost-frontend:${{ github.sha }} .
+        run: docker build --tag katalume-frontend:${{ github.sha }} .
 
   e2e:
     runs-on: ubuntu-latest

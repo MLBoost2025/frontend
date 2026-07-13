@@ -79,7 +79,7 @@ function LoginForm() {
         <div className="mb-6 flex items-center justify-center gap-2.5">
           <BrandMark className="h-10 w-10" />
           <span className="text-lg font-bold tracking-tight text-zinc-900 dark:text-white">
-            MLBoost
+            Katalume
           </span>
         </div>
 
@@ -89,7 +89,7 @@ function LoginForm() {
             {mode === "login" ? "Sign in to continue" : "Create your account"}
           </h1>
           <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-            LeetCode rigor meets Kaggle depth — practice ML with instant judging.
+            Practice machine learning into mastery. LeetCode rigor meets Kaggle depth.
           </p>
         </div>
 

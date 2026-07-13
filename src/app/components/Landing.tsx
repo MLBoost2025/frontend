@@ -61,7 +61,7 @@ export default function Landing() {
         <div className="flex items-center gap-2.5">
           <BrandMark />
           <span className="text-[17px] font-bold tracking-tight text-zinc-900 dark:text-white">
-            MLBoost
+            Katalume
           </span>
         </div>
         <div className="flex items-center gap-2">
@@ -86,13 +86,13 @@ export default function Landing() {
             <Sparkles className="h-3.5 w-3.5" /> LeetCode × Kaggle, for ML
           </span>
           <h1 className="mx-auto mt-5 max-w-3xl font-display text-4xl font-bold leading-[1.08] tracking-[-0.05em] text-zinc-900 dark:text-white sm:text-5xl md:text-6xl">
-            Practice machine learning like you{" "}
-            <span className="text-gradient-brand">mean it.</span>
+            Practice machine learning into{" "}
+            <span className="text-gradient-brand">mastery.</span>
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-zinc-600 dark:text-zinc-400">
-            Interview-grade ML &amp; data-science problems with an in-browser judge,
-            timed contests, guided tracks, and progress computed from your real
-            submissions.
+            Katalume is the training ground for machine learning — solve real ML
+            problems in an in-browser judge, compete in contests, and climb to
+            mastery. LeetCode rigor meets Kaggle depth.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Link href="/login" className="btn-primary px-5 py-2.5 text-[15px]">
@@ -220,7 +220,7 @@ export default function Landing() {
 
       {/* Footer */}
       <footer className="mx-auto flex w-full max-w-6xl flex-col items-center justify-center gap-3 border-t border-black/[0.05] px-5 py-6 text-xs text-zinc-400 dark:border-white/[0.06] sm:flex-row">
-        <span>© {`${new Date().getFullYear()}`} MLBoost — practice ML, the right way.</span>
+        <span>© {`${new Date().getFullYear()}`} Katalume — Practice machine learning into mastery.</span>
       </footer>
     </div>
   );

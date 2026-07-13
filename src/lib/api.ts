@@ -44,8 +44,8 @@ const ALLOW_MOCK_FALLBACK = process.env.NEXT_PUBLIC_API_FALLBACK_TO_MOCK
   ? process.env.NEXT_PUBLIC_API_FALLBACK_TO_MOCK === "true"
   : process.env.NODE_ENV !== "production";
 
-const MOCK_SESSION_KEY = "mlboost.mock.session";
-const SUBMISSION_HISTORY_KEY = "mlboost.submission.history";
+const MOCK_SESSION_KEY = "katalume.mock.session";
+const SUBMISSION_HISTORY_KEY = "katalume.submission.history";
 
 const SUBMIT_DELAY_MS = 2000;
 const FETCH_DELAY_MS = 420;
@@ -1298,7 +1298,7 @@ async function liveFetchCompanyTracks(): Promise<CompanyTrack[]> {
     return {
       id: track.id,
       title: track.title,
-      company: "MLBoost curated",
+      company: "Katalume curated",
       description: track.description ?? "",
       totalProblems: problems.length,
       solvedProblems: problems.filter((problem) => problem.status === "solved").length,

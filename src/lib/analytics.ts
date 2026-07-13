@@ -19,7 +19,7 @@ export async function trackEvent(event: AnalyticsEvent): Promise<void> {
   if (typeof window !== "undefined") {
     let parsed: AnalyticsEvent[] = [];
     try {
-      const history = window.localStorage.getItem("mlboost.analytics.events");
+      const history = window.localStorage.getItem("katalume.analytics.events");
       if (history) {
         const decoded = JSON.parse(history);
         if (Array.isArray(decoded)) {
@@ -33,7 +33,7 @@ export async function trackEvent(event: AnalyticsEvent): Promise<void> {
     parsed.unshift(enriched);
     try {
       window.localStorage.setItem(
-        "mlboost.analytics.events",
+        "katalume.analytics.events",
         JSON.stringify(parsed.slice(0, 150))
       );
     } catch {

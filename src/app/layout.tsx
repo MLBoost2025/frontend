@@ -19,22 +19,23 @@ const spaceMono = Space_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
-  title: { default: "MLBoost — Practice machine learning by building", template: "%s | MLBoost" },
-  description: "Practice production-minded machine learning through focused coding problems, learning tracks, and competitions.",
-  applicationName: "MLBoost",
+  title: { default: "Katalume — Practice machine learning into mastery.", template: "%s | Katalume" },
+  description: "Katalume is the training ground for machine learning — solve real ML problems in an in-browser judge, compete in contests, and climb to mastery. LeetCode rigor meets Kaggle depth.",
+  applicationName: "Katalume",
+  manifest: "/manifest.webmanifest",
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
-    siteName: "MLBoost",
-    title: "MLBoost — Practice machine learning by building",
-    description: "Focused ML coding problems, learning tracks, and competitions.",
+    siteName: "Katalume",
+    title: "Katalume — Practice machine learning into mastery.",
+    description: "Katalume is the training ground for machine learning — solve real ML problems in an in-browser judge, compete in contests, and climb to mastery. LeetCode rigor meets Kaggle depth.",
     url: "/",
   },
-  twitter: { card: "summary", title: "MLBoost", description: "Practice machine learning by building." },
+  twitter: { card: "summary", title: "Katalume", description: "Practice machine learning into mastery." },
   robots: { index: true, follow: true },
   icons: {
-    icon: "/brand/mlboost-mark.svg",
-    shortcut: "/brand/mlboost-mark.svg",
+    icon: "/brand/katalume-mark.svg",
+    shortcut: "/brand/katalume-mark.svg",
   },
 };
 
