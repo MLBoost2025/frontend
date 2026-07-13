@@ -2205,3 +2205,48 @@ export async function clearSubmissionHistory(): Promise<void> {
   }
   window.localStorage.removeItem(SUBMISSION_HISTORY_KEY);
 }
+
+// ----- Social login (OAuth) -----
+
+export type SocialProvider = "google" | "github";
+export interface AuthProvider {
+  id: SocialProvider;
+  name: string;
+}
+
+// The web app is a first-party BFF, but the OAuth redirect dance must go straight
+// to the backend (a proxy would follow the provider redirect server-side). In a
+// shared-parent-domain deploy (katalume.com + api.katalume.com, COOKIE_DOMAIN=
+// .katalume.com) the session cookie set by the callback is first-party to both.
+const OAUTH_BACKEND_ORIGIN = (process.env.NEXT_PUBLIC_BACKEND_ORIGIN || "").replace(/\/$/, "");
+
+export function socialLoginUrl(provider: SocialProvider): string {
+  const base = OAUTH_BACKEND_ORIGIN || "";
+  return `${base}/api/auth/oauth/${provider}`;
+}
+
+// Which social providers the backend has configured. In mock mode we advertise
+// both so the public demo shows the full sign-in experience.
+export async function fetchAuthProviders(): Promise<AuthProvider[]> {
+  if (getNormalizedApiMode() === "mock") {
+    return [
+      { id: "google", name: "Google" },
+      { id: "github", name: "GitHub" },
+    ];
+  }
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/providers`, {
+      credentials: "include",
+      headers: { Accept: "application/json" },
+    });
+    if (!response.ok) return [];
+    const data = (await response.json()) as { providers?: AuthProvider[] };
+    return Array.isArray(data.providers) ? data.providers : [];
+  } catch {
+    return [];
+  }
+}
+
+export function isMockMode(): boolean {
+  return getNormalizedApiMode() === "mock";
+}
