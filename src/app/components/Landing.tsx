@@ -49,7 +49,7 @@ const STATS = [
 
 export default function Landing() {
   return (
-    <div className="relative min-h-screen">
+    <div className="relative min-h-screen overflow-x-clip">
       <a
         href="#landing-main"
         className="sr-only fixed left-4 top-4 z-50 rounded-full bg-brand-500 px-4 py-2 text-sm font-semibold text-white focus:not-sr-only"
