@@ -1,5 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+const runPythonInBrowserMock = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/browserPython", () => ({
+  runPythonInBrowser: runPythonInBrowserMock,
+}));
+
 function jsonResponse(body: unknown, status = 200): Response {
   return {
     ok: status >= 200 && status < 300,
@@ -16,6 +21,7 @@ describe("live API contract", () => {
     vi.stubEnv("NEXT_PUBLIC_API_URL", "https://api.example.test/api");
     vi.stubEnv("NEXT_PUBLIC_EXECUTION_MODE", "server");
     window.localStorage.clear();
+    runPythonInBrowserMock.mockReset();
   });
 
   afterEach(() => {
@@ -75,5 +81,49 @@ describe("live API contract", () => {
       headers: expect.objectContaining({ "Idempotency-Key": "request-uuid" }),
     }));
     expect(String(fetchMock.mock.calls[1][0]).endsWith("/submissions/sub-1")).toBe(true);
+  });
+
+  it("loads the active live practice suite for browser execution", async () => {
+    vi.stubEnv("NEXT_PUBLIC_EXECUTION_MODE", "browser");
+    const testcases = [
+      { input: '{"value":1}', expectedOutput: '1', isPublic: true },
+      { input: '{"value":2}', expectedOutput: '2', isPublic: false },
+    ];
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({
+      problemId: "problem-1",
+      slug: "dynamic-problem",
+      testcaseVersion: 3,
+      testcases,
+    }));
+    vi.stubGlobal("fetch", fetchMock);
+    runPythonInBrowserMock.mockResolvedValue({
+      submissionId: "local-1",
+      problemId: "problem-1",
+      mode: "run",
+      visibility: "sample",
+      status: "Accepted",
+      runtimeMs: 10,
+      memoryMb: 0,
+      score: 100,
+      passedCount: 1,
+      totalCount: 1,
+      message: "Passed.",
+      testCases: [],
+      source: "browser",
+      submittedAt: new Date().toISOString(),
+    });
+
+    const { runCode } = await import("./api");
+    await runCode("problem-1", "def solve(payload): return payload['value']", "dynamic-problem");
+
+    expect(String(fetchMock.mock.calls[0][0])).toContain(
+      "/problems/dynamic-problem/practice"
+    );
+    expect(runPythonInBrowserMock).toHaveBeenCalledWith(
+      "problem-1",
+      expect.any(String),
+      "run",
+      testcases
+    );
   });
 });

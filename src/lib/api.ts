@@ -71,6 +71,13 @@ interface CatalogProblemSpec {
   testcases: Array<BrowserPracticeCase & { timeLimit: number; memoryLimit: number }>;
 }
 
+interface LivePracticeSpec {
+  problemId: string;
+  slug: string;
+  testcaseVersion: number;
+  testcases: Array<BrowserPracticeCase & { timeLimit?: number; memoryLimit?: number }>;
+}
+
 const MOCK_COMPANY_TRACKS: CompanyTrack[] = [
   {
     id: "track-ml-core-50",
@@ -615,11 +622,28 @@ async function browserExecute(
   mode: ExecutionMode,
   catalogIdentifier = problemId
 ) {
-  const spec = CATALOG_BY_IDENTIFIER.get(catalogIdentifier);
-  if (!spec) {
-    throw new Error("The selected practice problem could not be loaded.");
+  let testcases: BrowserPracticeCase[];
+  if (getNormalizedApiMode() === "mock") {
+    const spec = CATALOG_BY_IDENTIFIER.get(catalogIdentifier);
+    if (!spec) {
+      throw new Error("The selected practice problem could not be loaded.");
+    }
+    testcases = spec.testcases;
+  } else {
+    const live = await fetchWithRetry<LivePracticeSpec>(
+      `/problems/${encodeURIComponent(catalogIdentifier)}/practice`,
+      { method: "GET" }
+    );
+    if (!Array.isArray(live.testcases) || live.testcases.length === 0) {
+      throw new Error("This problem has no browser-practice tests.");
+    }
+    testcases = live.testcases.map((testcase) => ({
+      input: testcase.input,
+      expectedOutput: testcase.expectedOutput,
+      isPublic: Boolean(testcase.isPublic),
+    }));
   }
-  return runPythonInBrowser(problemId, code, mode, spec.testcases);
+  return runPythonInBrowser(problemId, code, mode, testcases);
 }
 
 async function liveExecute(problemId: string, code: string, mode: ExecutionMode, contestId?: string) {
