@@ -28,24 +28,31 @@ async function startAsMockAdmin(page: import("@playwright/test").Page) {
   }, adminSession);
 }
 
-test("a learner can run, submit, and review a mock solution", async ({ page }) => {
+test("a learner can run, check, and review a browser-executed solution", async ({ page }) => {
   await page.goto("/login");
   await page.getByLabel("Email").fill("critical-flow@example.com");
   await page.getByLabel("Password").fill("password123");
   await page.getByRole("button", { name: "Sign in" }).click();
 
+  await page.evaluate(() => {
+    localStorage.setItem(
+      "katalume:draft:healthcare-feature-mean",
+      "def solve(payload):\n    return sum(payload['values']) / len(payload['values'])"
+    );
+  });
+
   await page
-    .getByRole("button", { name: "Open KNN Classifier on Iris" })
+    .getByRole("button", { name: "Open Healthcare Feature Mean" })
     .click();
-  await expect(page).toHaveURL(/\/problems\/knn-classifier-iris/);
+  await expect(page).toHaveURL(/\/problems\/healthcare-feature-mean/);
 
   await page.getByRole("button", { name: "Run" }).click();
-  await expect(page.getByText("Accepted", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("Accepted", { exact: true }).first()).toBeVisible({ timeout: 70_000 });
   await expect(page.getByText(/sample tests: 2\/2/i)).toBeVisible();
 
   await page.getByRole("button", { name: "Submit" }).click();
   await expect(page.getByText("Accepted", { exact: true }).last()).toBeVisible();
-  await expect(page.getByText(/hidden tests: 6\/6/i)).toBeVisible();
+  await expect(page.getByText(/practice tests: 8\/8/i)).toBeVisible({ timeout: 70_000 });
 
   await page.getByRole("button", { name: "History" }).click();
   await expect(page.getByText(/submit · accepted/i)).toBeVisible();

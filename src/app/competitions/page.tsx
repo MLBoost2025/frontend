@@ -46,6 +46,7 @@ function durationLabel(competition: Competition): string {
 }
 
 export default function CompetitionsPage() {
+  const rankedEnabled = process.env.NEXT_PUBLIC_EXECUTION_MODE === "server";
   const [competitions, setCompetitions] = useState<Competition[]>([]);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -83,6 +84,11 @@ export default function CompetitionsPage() {
       title="Competitions"
       subtitle="Timed contests designed for ML interview readiness"
     >
+      {!rankedEnabled ? (
+        <p className="rounded-xl border border-brand-500/20 bg-brand-500/[0.06] px-4 py-3 text-sm text-zinc-700 dark:text-zinc-200">
+          Ranked contests are coming next. The free beta is focused on the 126-problem local practice arena; preview schedules and formats here.
+        </p>
+      ) : null}
       <section className="rounded-2xl bg-gradient-to-r from-brand-800 via-brand-600 to-brand-500 px-6 py-6 text-white">
         <p className="text-xs uppercase tracking-[0.2em] text-brand-100">
           {featured?.status === "live" ? "Live Now" : "Featured Event"}

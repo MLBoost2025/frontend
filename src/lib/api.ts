@@ -31,6 +31,8 @@ import {
 import { AUTH_COOKIE_NAME, AUTH_COOKIE_TTL_SECONDS } from "@/lib/auth";
 import { trackEvent } from "@/lib/analytics";
 import { reportError, reportMessage } from "@/lib/observability";
+import rawProblemCatalog from "@/data/problem-catalog.json";
+import { runPythonInBrowser, type BrowserPracticeCase } from "@/lib/browserPython";
 
 type ApiMode = "mock" | "live" | "auto";
 
@@ -40,6 +42,7 @@ const API_MODE = ((process.env.NEXT_PUBLIC_API_MODE || DEFAULT_API_MODE).toLower
   DEFAULT_API_MODE) as ApiMode;
 const API_RETRY_COUNT = Number(process.env.NEXT_PUBLIC_API_RETRY_COUNT || 2);
 const API_TIMEOUT_MS = Number(process.env.NEXT_PUBLIC_API_TIMEOUT_MS || 8000);
+const EXECUTION_ADAPTER = (process.env.NEXT_PUBLIC_EXECUTION_MODE || "browser").toLowerCase();
 const ALLOW_MOCK_FALLBACK = process.env.NEXT_PUBLIC_API_FALLBACK_TO_MOCK
   ? process.env.NEXT_PUBLIC_API_FALLBACK_TO_MOCK === "true"
   : process.env.NODE_ENV !== "production";
@@ -47,13 +50,25 @@ const ALLOW_MOCK_FALLBACK = process.env.NEXT_PUBLIC_API_FALLBACK_TO_MOCK
 const MOCK_SESSION_KEY = "katalume.mock.session";
 const SUBMISSION_HISTORY_KEY = "katalume.submission.history";
 
-const SUBMIT_DELAY_MS = 2000;
 const FETCH_DELAY_MS = 420;
 const AUTH_DELAY_MS = 550;
 
-interface EvaluationRule {
-  requiredPatterns: RegExp[];
-  guidance: string;
+interface CatalogProblemSpec {
+  slug: string;
+  title: string;
+  difficulty: Difficulty;
+  category: string;
+  acceptanceRate: number;
+  tags: string[];
+  summary: string;
+  description: string;
+  constraints: string[];
+  hints: string[];
+  starterCode: string;
+  sampleTestCases: Array<{ input: string; output: string }>;
+  hiddenTestCount: number;
+  editorial: ProblemDetail["editorial"];
+  testcases: Array<BrowserPracticeCase & { timeLimit: number; memoryLimit: number }>;
 }
 
 const MOCK_COMPANY_TRACKS: CompanyTrack[] = [
@@ -113,354 +128,36 @@ const MOCK_RECENT_RANKS: ContestRank[] = [
   },
 ];
 
-const MOCK_PROBLEMS: ProblemDetail[] = [
-  {
-    id: "p-001",
-    slug: "knn-classifier-iris",
-    title: "KNN Classifier on Iris",
-    difficulty: "Easy",
-    category: "Supervised Learning",
-    acceptance: 74,
-    acceptanceRate: 74,
-    status: "unsolved",
-    tags: ["scikit-learn", "classification", "knn"],
-    companies: ["Meta", "Amazon", "DoorDash"],
-    trackIds: ["track-ml-core-50"],
-    summary: "Implement KNN and return deterministic predictions on Iris slices.",
-    description:
-      "Implement `fit_and_predict(X_train, y_train, X_test, k)` using K-Nearest Neighbors logic. Use Euclidean distance and majority voting. Do not use `KNeighborsClassifier`.",
-    constraints: [
-      "1 <= k <= len(X_train)",
-      "All features are numeric floats.",
-      "Return a list of integer class predictions.",
-    ],
-    examples: [
-      {
-        input:
-          "X_train=[[5.1,3.5],[4.9,3.0]], y_train=[0,0], X_test=[[5.0,3.4]], k=1",
-        output: "[0]",
-      },
-      {
-        input:
-          "X_train=[[6.7,3.1],[6.3,2.9],[5.0,3.6]], y_train=[2,1,0], X_test=[[6.5,3.0]], k=3",
-        output: "[1]",
-      },
-    ],
-    sampleTestCases: [
-      {
-        input:
-          "X_train=[[5.1,3.5],[4.9,3.0]], y_train=[0,0], X_test=[[5.0,3.4]], k=1",
-        output: "[0]",
-      },
-      {
-        input:
-          "X_train=[[6.7,3.1],[6.3,2.9],[5.0,3.6]], y_train=[2,1,0], X_test=[[6.5,3.0]], k=3",
-        output: "[1]",
-      },
-      {
-        input:
-          "X_train=[[5.4,3.9],[6.1,2.8],[6.9,3.1]], y_train=[0,1,2], X_test=[[6.0,3.0]], k=1",
-        output: "[1]",
-      },
-    ],
-    hiddenTestCount: 6,
-    hints: [
-      "Compute distances for every test point against every train point.",
-      "Sort by distance and pick the first k neighbors.",
-      "Vote with class frequency; break ties by choosing the smallest label.",
-    ],
-    editorial: {
-      summary:
-        "Use a brute-force nearest neighbor search over all training points and stable tie-breaking.",
-      approach:
-        "For each test vector, compute Euclidean distances to every train vector, sort ascending, take top-k labels, and vote by frequency with deterministic tie breaks.",
-      timeComplexity: "O(n_test * n_train * d + n_test * n_train log n_train)",
-      spaceComplexity: "O(n_train)",
-      pitfalls: [
-        "Using Manhattan distance instead of Euclidean by mistake.",
-        "Not handling label ties deterministically.",
-        "Mutating input arrays during sorting.",
-      ],
-    },
-    starterCode: `import math
-from collections import Counter
+const PROBLEM_CATALOG = rawProblemCatalog as unknown as CatalogProblemSpec[];
 
-def fit_and_predict(X_train, y_train, X_test, k):
-    predictions = []
-    for x in X_test:
-        distances = []
-        for i, train_x in enumerate(X_train):
-            distance = math.sqrt(sum((a - b) ** 2 for a, b in zip(x, train_x)))
-            distances.append((distance, y_train[i]))
+const MOCK_PROBLEMS: ProblemDetail[] = PROBLEM_CATALOG.map((problem, index) => ({
+  id: `p-${String(index + 1).padStart(3, "0")}`,
+  slug: problem.slug,
+  title: problem.title,
+  difficulty: problem.difficulty,
+  category: problem.category,
+  acceptance: problem.acceptanceRate,
+  acceptanceRate: problem.acceptanceRate,
+  status: "unsolved",
+  tags: problem.tags,
+  summary: problem.summary,
+  description: problem.description,
+  constraints: problem.constraints,
+  examples: problem.sampleTestCases,
+  sampleTestCases: problem.sampleTestCases,
+  hiddenTestCount: problem.hiddenTestCount,
+  hints: problem.hints,
+  editorial: problem.editorial,
+  starterCode: problem.starterCode,
+  companies: [],
+  trackIds: [],
+}));
 
-        distances.sort(key=lambda item: item[0])
-        top_k = [label for _, label in distances[:k]]
-        vote = Counter(top_k).most_common()
-        vote.sort(key=lambda pair: (-pair[1], pair[0]))
-        predictions.append(vote[0][0])
-    return predictions`,
-  },
-  {
-    id: "p-002",
-    slug: "linear-regression-gradient-descent",
-    title: "Linear Regression via Gradient Descent",
-    difficulty: "Medium",
-    category: "Supervised Learning",
-    acceptance: 61,
-    acceptanceRate: 61,
-    status: "attempted",
-    tags: ["numpy", "regression", "optimization"],
-    companies: ["Google", "Stripe", "Databricks"],
-    trackIds: ["track-ml-core-50"],
-    summary:
-      "Train y = wx + b with gradient descent and return learned parameters.",
-    description:
-      "Implement `train_linear_regression(X, y, lr, epochs)` and return `(w, b)`. Optimize Mean Squared Error with gradient descent.",
-    constraints: [
-      "X and y are 1D lists of equal length.",
-      "Use full-batch gradient descent.",
-      "Return floats rounded to 4 decimals.",
-    ],
-    examples: [
-      {
-        input: "X=[1,2,3], y=[3,5,7], lr=0.01, epochs=1000",
-        output: "(2.0, 1.0)",
-      },
-    ],
-    sampleTestCases: [
-      {
-        input: "X=[1,2,3], y=[3,5,7], lr=0.01, epochs=1000",
-        output: "(2.0, 1.0)",
-      },
-      {
-        input: "X=[0,1,2], y=[1,3,5], lr=0.02, epochs=800",
-        output: "(2.0, 1.0)",
-      },
-      {
-        input: "X=[2,4,6], y=[5,9,13], lr=0.01, epochs=1200",
-        output: "(2.0, 1.0)",
-      },
-    ],
-    hiddenTestCount: 7,
-    hints: [
-      "Prediction: y_hat = w*x + b.",
-      "dw = (2/n) * sum((y_hat - y) * x); db = (2/n) * sum(y_hat - y).",
-      "Update both parameters each epoch.",
-    ],
-    editorial: {
-      summary:
-        "Batch gradient descent converges quickly on 1D linear relations if updates are consistent.",
-      approach:
-        "Initialize w, b to 0. In each epoch compute predictions, derive gradients over all samples, and update both parameters using learning rate.",
-      timeComplexity: "O(epochs * n)",
-      spaceComplexity: "O(n)",
-      pitfalls: [
-        "Forgetting factor 2 in MSE gradient.",
-        "Updating w before computing db from same step.",
-        "Choosing an unstable learning rate.",
-      ],
-    },
-    starterCode: `def train_linear_regression(X, y, lr=0.01, epochs=1000):
-    n = len(X)
-    w = 0.0
-    b = 0.0
-
-    for _ in range(epochs):
-        y_hat = [w * x + b for x in X]
-        dw = (2 / n) * sum((pred - target) * x for pred, target, x in zip(y_hat, y, X))
-        db = (2 / n) * sum(pred - target for pred, target in zip(y_hat, y))
-        w -= lr * dw
-        b -= lr * db
-
-    return round(w, 4), round(b, 4)`,
-  },
-  {
-    id: "p-003",
-    slug: "standardize-dataset",
-    title: "Standardize Dataset Columns",
-    difficulty: "Easy",
-    category: "Data Preprocessing",
-    acceptance: 82,
-    acceptanceRate: 82,
-    status: "solved",
-    tags: ["pandas", "numpy", "preprocessing"],
-    companies: ["Uber", "Airbnb", "Flipkart"],
-    trackIds: ["track-pandas-interview-30"],
-    summary: "Apply z-score standardization to selected numeric columns.",
-    description:
-      "Given a pandas DataFrame and a list of columns, return a new DataFrame where those columns are standardized using (x - mean) / std.",
-    constraints: [
-      "Do not mutate the input DataFrame.",
-      "Use population standard deviation (ddof=0).",
-      "Return values rounded to 5 decimals.",
-    ],
-    examples: [
-      {
-        input: "df={'age':[20,30,40]}, columns=['age']",
-        output: "age=[-1.22474, 0.0, 1.22474]",
-      },
-    ],
-    sampleTestCases: [
-      {
-        input: "df={'age':[20,30,40]}, columns=['age']",
-        output: "age=[-1.22474, 0.0, 1.22474]",
-      },
-      {
-        input: "df={'a':[1,2,3], 'b':[10,10,10]}, columns=['a']",
-        output: "a=[-1.22474, 0.0, 1.22474]",
-      },
-      {
-        input: "df={'x':[2,4,6,8]}, columns=['x']",
-        output: "x=[-1.34164,-0.44721,0.44721,1.34164]",
-      },
-    ],
-    hiddenTestCount: 5,
-    hints: [
-      "Work on a copy: `scaled = df.copy()`.",
-      "Use vectorized operations for each column.",
-      "Handle zero std by filling that column with 0.0.",
-    ],
-    editorial: {
-      summary:
-        "Standardization should be stable, non-mutating, and safe on constant columns.",
-      approach:
-        "Copy input frame, loop over target columns, compute mean/std (ddof=0), handle std=0 edge case, and write standardized values.",
-      timeComplexity: "O(n * c)",
-      spaceComplexity: "O(n * c)",
-      pitfalls: [
-        "Mutating original DataFrame.",
-        "Using sample std (ddof=1) accidentally.",
-        "Divide by zero for constant columns.",
-      ],
-    },
-    starterCode: `import pandas as pd
-
-def standardize_columns(df: pd.DataFrame, columns: list[str]) -> pd.DataFrame:
-    scaled = df.copy()
-    for col in columns:
-        mean = scaled[col].mean()
-        std = scaled[col].std(ddof=0)
-        if std == 0:
-            scaled[col] = 0.0
-        else:
-            scaled[col] = ((scaled[col] - mean) / std).round(5)
-    return scaled`,
-  },
-  {
-    id: "p-004",
-    slug: "f1-score-from-scratch",
-    title: "Compute F1 Score from Scratch",
-    difficulty: "Medium",
-    category: "Model Evaluation",
-    acceptance: 58,
-    acceptanceRate: 58,
-    status: "unsolved",
-    tags: ["metrics", "classification", "scikit-learn"],
-    companies: ["Netflix", "Grab", "Microsoft"],
-    trackIds: ["track-ml-core-50", "track-recommendation-20"],
-    summary: "Implement precision, recall, and F1 for binary classification.",
-    description:
-      "Implement `binary_f1(y_true, y_pred)` returning a float in [0, 1]. Treat label `1` as positive class.",
-    constraints: [
-      "y_true and y_pred have equal lengths.",
-      "Handle divide-by-zero safely.",
-      "Round output to 4 decimals.",
-    ],
-    examples: [
-      {
-        input: "y_true=[1,0,1,1], y_pred=[1,0,0,1]",
-        output: "0.8",
-      },
-    ],
-    sampleTestCases: [
-      {
-        input: "y_true=[1,0,1,1], y_pred=[1,0,0,1]",
-        output: "0.8",
-      },
-      {
-        input: "y_true=[0,0,0], y_pred=[0,0,0]",
-        output: "0.0",
-      },
-      {
-        input: "y_true=[1,1,1], y_pred=[1,1,1]",
-        output: "1.0",
-      },
-    ],
-    hiddenTestCount: 8,
-    hints: [
-      "Count TP, FP, FN explicitly.",
-      "precision = TP / (TP + FP), recall = TP / (TP + FN).",
-      "F1 is 0 when precision + recall is 0.",
-    ],
-    editorial: {
-      summary:
-        "F1 balances precision and recall and is useful for imbalanced positives.",
-      approach:
-        "Compute TP/FP/FN in one pass, derive precision and recall with safe denominators, then harmonic mean.",
-      timeComplexity: "O(n)",
-      spaceComplexity: "O(1)",
-      pitfalls: [
-        "Using macro formula on binary labels incorrectly.",
-        "Not guarding denominator = 0.",
-        "Mixing positive class label.",
-      ],
-    },
-    starterCode: `def binary_f1(y_true, y_pred):
-    tp = sum(1 for t, p in zip(y_true, y_pred) if t == 1 and p == 1)
-    fp = sum(1 for t, p in zip(y_true, y_pred) if t == 0 and p == 1)
-    fn = sum(1 for t, p in zip(y_true, y_pred) if t == 1 and p == 0)
-
-    precision = tp / (tp + fp) if (tp + fp) else 0.0
-    recall = tp / (tp + fn) if (tp + fn) else 0.0
-
-    if precision + recall == 0:
-        return 0.0
-    return round(2 * precision * recall / (precision + recall), 4)`,
-  },
-];
-
-const EVALUATION_RULES: Record<string, EvaluationRule> = {
-  "p-001": {
-    requiredPatterns: [
-      /def\s+fit_and_predict\s*\(/,
-      /distance/i,
-      /sort\(/,
-      /Counter|most_common/,
-    ],
-    guidance:
-      "Ensure you compute Euclidean distances and majority vote across the nearest neighbors.",
-  },
-  "p-002": {
-    requiredPatterns: [
-      /def\s+train_linear_regression\s*\(/,
-      /dw\s*=/,
-      /db\s*=/,
-      /for\s+_\s+in\s+range\(epochs\)/,
-    ],
-    guidance:
-      "Your loop should update both w and b every epoch using gradients from MSE.",
-  },
-  "p-003": {
-    requiredPatterns: [
-      /def\s+standardize_columns\s*\(/,
-      /copy\(/,
-      /std\(/,
-      /mean\(/,
-    ],
-    guidance:
-      "Work on a DataFrame copy and standardize each requested column with z-score.",
-  },
-  "p-004": {
-    requiredPatterns: [
-      /def\s+binary_f1\s*\(/,
-      /precision\s*=/,
-      /recall\s*=/,
-      /tp|true[_\s]?positive/i,
-    ],
-    guidance:
-      "Compute TP/FP/FN first, then precision and recall before calculating F1.",
-  },
-};
+const CATALOG_BY_IDENTIFIER = new Map<string, CatalogProblemSpec>();
+PROBLEM_CATALOG.forEach((problem, index) => {
+  CATALOG_BY_IDENTIFIER.set(problem.slug, problem);
+  CATALOG_BY_IDENTIFIER.set(`p-${String(index + 1).padStart(3, "0")}`, problem);
+});
 
 function wait(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -556,15 +253,6 @@ function getProblemByIdentifier(identifier: string): ProblemDetail | undefined {
   );
 }
 
-function getRule(problemId: string): EvaluationRule {
-  return (
-    EVALUATION_RULES[problemId] ?? {
-      requiredPatterns: [/def\s+\w+\s*\(/],
-      guidance: "Define a function and return deterministic output.",
-    }
-  );
-}
-
 function readSubmissionHistoryStore(): SubmissionRecord[] {
   if (!isBrowser()) {
     return [];
@@ -636,204 +324,14 @@ function normalizeToListItem(problem: ProblemDetail): Problem {
   };
 }
 
-function makeSampleOrHiddenCases(
-  mode: ExecutionMode,
-  problem: ProblemDetail
-): Array<{ input: string; output: string }> {
-  if (mode === "run") {
-    return problem.sampleTestCases.slice(0, 2);
-  }
-
-  return Array.from({ length: problem.hiddenTestCount }).map((_, index) => ({
-    input: `hidden-${index + 1}`,
-    output: "hidden-output",
-  }));
-}
-
-function buildTestCaseResult(
-  mode: ExecutionMode,
-  index: number,
-  test: { input: string; output: string },
-  passed: boolean,
-  guidance: string,
-  runtimeTriggered: boolean
-): SubmissionTestCaseResult {
-  const visibility = mode === "run" ? "sample" : "hidden";
-
-  if (runtimeTriggered) {
-    return {
-      name: visibility === "sample" ? `Sample ${index + 1}` : `Hidden ${index + 1}`,
-      visibility,
-      passed: false,
-      errorMessage: "Execution terminated unexpectedly.",
-      input: visibility === "sample" ? test.input : undefined,
-      expectedOutput: visibility === "sample" ? test.output : undefined,
-      actualOutput: visibility === "sample" ? "" : undefined,
-    };
-  }
-
-  if (visibility === "sample") {
-    return {
-      name: `Sample ${index + 1}`,
-      visibility,
-      input: test.input,
-      expectedOutput: test.output,
-      actualOutput: passed ? test.output : "Incorrect output",
-      passed,
-      errorMessage: passed ? undefined : guidance,
-    };
-  }
-
-  return {
-    name: `Hidden ${index + 1}`,
-    visibility,
-    passed,
-    errorMessage: passed ? undefined : guidance,
-  };
-}
-
-function createSubmissionResult(
-  problemId: string,
-  code: string,
-  mode: ExecutionMode,
-  source: "mock" | "live" = "mock"
-): SubmissionResult {
-  const problem = getProblemByIdentifier(problemId);
-
-  if (!problem) {
-    return {
-      submissionId: `sub_${Date.now()}`,
-      problemId,
-      mode,
-      visibility: mode === "run" ? "sample" : "hidden",
-      status: "Runtime Error",
-      runtimeMs: 0,
-      memoryMb: 0,
-      score: 0,
-      passedCount: 0,
-      totalCount: 0,
-      message: "Problem not found.",
-      traceback: "LookupError: The requested problem could not be loaded.",
-      testCases: [],
-      source,
-      submittedAt: new Date().toISOString(),
-    };
-  }
-
-  const cleanedCode = code.trim();
-  const rule = getRule(problem.id);
-  const hasPlaceholder = /\bpass\b/.test(cleanedCode) || cleanedCode.length < 25;
-  const runtimeTriggered =
-    /1\s*\/\s*0/.test(cleanedCode) || /raise\s+[A-Za-z_]\w*Error/.test(cleanedCode);
-  const matchedPatterns = rule.requiredPatterns.filter((pattern) =>
-    pattern.test(cleanedCode)
-  ).length;
-
-  const isStrongSolution =
-    !hasPlaceholder && matchedPatterns === rule.requiredPatterns.length;
-  const isPartialSolution =
-    !hasPlaceholder &&
-    matchedPatterns >= Math.max(1, Math.ceil(rule.requiredPatterns.length * 0.5));
-
-  const cases = makeSampleOrHiddenCases(mode, problem);
-
-  const testCases = cases.map((testCase, index) => {
-    let passed = false;
-
-    if (runtimeTriggered) {
-      passed = false;
-    } else if (isStrongSolution) {
-      passed = true;
-    } else if (isPartialSolution && index === 0) {
-      passed = true;
-    }
-
-    return buildTestCaseResult(
-      mode,
-      index,
-      testCase,
-      passed,
-      rule.guidance,
-      runtimeTriggered
-    );
-  });
-
-  const passedCount = testCases.filter((testCase) => testCase.passed).length;
-  const totalCount = testCases.length;
-  const score = Math.round((passedCount / Math.max(1, totalCount)) * 100);
-  const runtimeMs = runtimeTriggered ? 0 : 42 + Math.floor(Math.random() * 190);
-  const memoryMb = runtimeTriggered ? 0 : 14 + Math.floor(Math.random() * 36);
-
-  if (runtimeTriggered) {
-    return {
-      submissionId: `sub_${Date.now()}`,
-      problemId: problem.id,
-      mode,
-      visibility: mode === "run" ? "sample" : "hidden",
-      status: "Runtime Error",
-      runtimeMs,
-      memoryMb,
-      score: 0,
-      passedCount: 0,
-      totalCount,
-      message: "Runtime error while executing your solution.",
-      traceback:
-        "Traceback (most recent call last):\n  File \"main.py\", line 1, in <module>\nRuntimeError: simulated execution failure",
-      testCases,
-      source,
-      submittedAt: new Date().toISOString(),
-    };
-  }
-
-  if (passedCount === totalCount) {
-    return {
-      submissionId: `sub_${Date.now()}`,
-      problemId: problem.id,
-      mode,
-      visibility: mode === "run" ? "sample" : "hidden",
-      status: "Accepted",
-      runtimeMs,
-      memoryMb,
-      score: 100,
-      passedCount,
-      totalCount,
-      message:
-        mode === "run"
-          ? "All sample test cases passed."
-          : "Accepted on hidden tests.",
-      testCases,
-      source,
-      submittedAt: new Date().toISOString(),
-    };
-  }
-
-  return {
-    submissionId: `sub_${Date.now()}`,
-    problemId: problem.id,
-    mode,
-    visibility: mode === "run" ? "sample" : "hidden",
-    status: "Failed",
-    runtimeMs,
-    memoryMb,
-    score,
-    passedCount,
-    totalCount,
-    message: `Passed ${passedCount}/${totalCount} ${
-      mode === "run" ? "sample" : "hidden"
-    } tests. ${rule.guidance}`,
-    testCases,
-    source,
-    submittedAt: new Date().toISOString(),
-  };
-}
-
 function createSubmissionRecord(
   problemId: string,
   code: string,
   mode: ExecutionMode,
-  result: SubmissionResult
+  result: SubmissionResult,
+  problemIdentifier = problemId
 ): SubmissionRecord {
-  const problem = getProblemByIdentifier(problemId);
+  const problem = getProblemByIdentifier(problemIdentifier);
 
   return {
     id: result.submissionId,
@@ -986,15 +484,19 @@ function toAuthSessionFromLive(
 
 function toProblemFromLive(payload: unknown): Problem {
   const parsed = payload as Partial<Problem> & { _id?: string };
+  const id = parsed.id || parsed._id || `p-live-${Math.random().toString(36).slice(2, 8)}`;
   return {
-    id: parsed.id || parsed._id || `p-live-${Math.random().toString(36).slice(2, 8)}`,
+    id,
     slug: parsed.slug,
     title: parsed.title || "Untitled Problem",
     difficulty: parsed.difficulty || "Medium",
     category: parsed.category || "General",
     acceptance: parsed.acceptance || parsed.acceptanceRate || 0,
     acceptanceRate: parsed.acceptanceRate || parsed.acceptance || 0,
-    status: parsed.status || "unsolved",
+    status:
+      EXECUTION_ADAPTER === "browser"
+        ? computeDynamicStatus(id, parsed.status || "unsolved")
+        : parsed.status || "unsolved",
     tags: parsed.tags || [],
     summary: parsed.summary,
     companies: parsed.companies,
@@ -1005,6 +507,7 @@ function toProblemFromLive(payload: unknown): Problem {
 function toProblemDetailFromLive(slug: string, payload: unknown): ProblemDetail {
   const base = toProblemFromLive(payload);
   const parsed = payload as Partial<ProblemDetail>;
+  const bundled = getProblemByIdentifier(slug);
 
   return {
     ...base,
@@ -1016,7 +519,7 @@ function toProblemDetailFromLive(slug: string, payload: unknown): ProblemDetail 
     sampleTestCases: parsed.sampleTestCases || parsed.examples || [],
     hiddenTestCount: parsed.hiddenTestCount || 0,
     editorial:
-      parsed.editorial ||
+      parsed.editorial || bundled?.editorial ||
       ({
         summary: "Editorial unavailable.",
         approach: "Connect the backend editorial endpoint to populate this section.",
@@ -1106,9 +609,17 @@ async function liveFetchProblemBySlug(slug: string): Promise<ProblemDetail> {
   return toProblemDetailFromLive(slug, data);
 }
 
-async function mockExecute(problemId: string, code: string, mode: ExecutionMode) {
-  await wait(mode === "submit" ? SUBMIT_DELAY_MS : 900);
-  return createSubmissionResult(problemId, code, mode, "mock");
+async function browserExecute(
+  problemId: string,
+  code: string,
+  mode: ExecutionMode,
+  catalogIdentifier = problemId
+) {
+  const spec = CATALOG_BY_IDENTIFIER.get(catalogIdentifier);
+  if (!spec) {
+    throw new Error("The selected practice problem could not be loaded.");
+  }
+  return runPythonInBrowser(problemId, code, mode, spec.testcases);
 }
 
 async function liveExecute(problemId: string, code: string, mode: ExecutionMode, contestId?: string) {
@@ -1150,16 +661,17 @@ async function persistExecutionRecord(
   problemId: string,
   code: string,
   mode: ExecutionMode,
-  result: SubmissionResult
+  result: SubmissionResult,
+  problemIdentifier = problemId
 ): Promise<void> {
-  const record = createSubmissionRecord(problemId, code, mode, result);
+  const record = createSubmissionRecord(problemId, code, mode, result, problemIdentifier);
 
-  // Only cache locally for mock results. In live mode the backend is the source
+  // Cache local and legacy mock results. In live mode the backend is the source
   // of truth for history and solved-state; caching live results here would
   // create a split-brain (e.g. localStorage-derived "solved" status diverging
   // from the server). `source` is "mock" both in mock mode and when a live
   // call falls back to mock, which is exactly when we want the local cache.
-  if (result.source === "mock") {
+  if (result.source !== "live") {
     upsertSubmissionRecord(record);
   }
 
@@ -1448,17 +960,22 @@ export async function fetchProblemBySlug(slug: string): Promise<ProblemDetail> {
 export async function runCode(
   problemId: string,
   code: string,
-  _problemSlug?: string,
+  problemSlug?: string,
   _problemTitle?: string
 ): Promise<SubmissionResult> {
-  void _problemSlug;
   void _problemTitle;
 
-  const mockExecutor = async () => mockExecute(problemId, code, "run");
+  if (EXECUTION_ADAPTER === "browser") {
+    const result = await browserExecute(problemId, code, "run", problemSlug);
+    await persistExecutionRecord(problemId, code, "run", result, problemSlug);
+    return result;
+  }
+
+  const mockExecutor = async () => browserExecute(problemId, code, "run", problemSlug);
   const liveExecutor = async () => liveExecute(problemId, code, "run");
 
   const result = await runWithBackendSwitch("run_code", liveExecutor, mockExecutor);
-  await persistExecutionRecord(problemId, code, "run", result);
+  await persistExecutionRecord(problemId, code, "run", result, problemSlug);
   return result;
 }
 
@@ -1467,20 +984,28 @@ export async function submitSolution(
   code: string,
   _languageId = 71,
   _token?: string,
-  _problemSlug?: string,
+  problemSlug?: string,
   _problemTitle?: string,
   contestId?: string
 ): Promise<SubmissionResult> {
   void _languageId;
   void _token;
-  void _problemSlug;
   void _problemTitle;
 
-  const mockExecutor = async () => mockExecute(problemId, code, "submit");
+  if (EXECUTION_ADAPTER === "browser") {
+    if (contestId) {
+      throw new Error("Ranked contests require the server judge and are not available in local practice mode.");
+    }
+    const result = await browserExecute(problemId, code, "submit", problemSlug);
+    await persistExecutionRecord(problemId, code, "submit", result, problemSlug);
+    return result;
+  }
+
+  const mockExecutor = async () => browserExecute(problemId, code, "submit", problemSlug);
   const liveExecutor = async () => liveExecute(problemId, code, "submit", contestId);
 
   const result = await runWithBackendSwitch("submit_code", liveExecutor, mockExecutor);
-  await persistExecutionRecord(problemId, code, "submit", result);
+  await persistExecutionRecord(problemId, code, "submit", result, problemSlug);
   return result;
 }
 
@@ -1570,6 +1095,9 @@ async function liveFetchSubmissionHistory(
 export async function fetchSubmissionHistory(
   problemIdentifier: string
 ): Promise<SubmissionRecord[]> {
+  if (EXECUTION_ADAPTER === "browser") {
+    return mockFetchSubmissionHistory(problemIdentifier);
+  }
   return runWithBackendSwitch(
     "fetch_submission_history",
     () => liveFetchSubmissionHistory(problemIdentifier),
@@ -1697,6 +1225,9 @@ async function liveFetchUserStats(): Promise<UserStats> {
 }
 
 export async function fetchUserStats(): Promise<UserStats> {
+  if (EXECUTION_ADAPTER === "browser") {
+    return mockFetchUserStats();
+  }
   return runWithBackendSwitch(
     "fetch_user_stats",
     () => liveFetchUserStats(),
@@ -1752,6 +1283,9 @@ async function liveFetchRecentActivity(limit: number): Promise<RecentActivityIte
 }
 
 export async function fetchRecentActivity(limit = 5): Promise<RecentActivityItem[]> {
+  if (EXECUTION_ADAPTER === "browser") {
+    return mockFetchRecentActivity(limit);
+  }
   return runWithBackendSwitch(
     "fetch_recent_activity",
     () => liveFetchRecentActivity(limit),
@@ -1981,6 +1515,9 @@ async function liveFetchUserProgress(): Promise<UserProgress> {
 }
 
 export async function fetchUserProgress(): Promise<UserProgress> {
+  if (EXECUTION_ADAPTER === "browser") {
+    return mockFetchUserProgress();
+  }
   return runWithBackendSwitch(
     "fetch_user_progress",
     () => liveFetchUserProgress(),
@@ -2214,15 +1751,11 @@ export interface AuthProvider {
   name: string;
 }
 
-// The web app is a first-party BFF, but the OAuth redirect dance must go straight
-// to the backend (a proxy would follow the provider redirect server-side). In a
-// shared-parent-domain deploy (katalume.com + api.katalume.com, COOKIE_DOMAIN=
-// .katalume.com) the session cookie set by the callback is first-party to both.
-const OAUTH_BACKEND_ORIGIN = (process.env.NEXT_PUBLIC_BACKEND_ORIGIN || "").replace(/\/$/, "");
-
 export function socialLoginUrl(provider: SocialProvider): string {
-  const base = OAUTH_BACKEND_ORIGIN || "";
-  return `${base}/api/auth/oauth/${provider}`;
+  // Always start OAuth through the same-origin BFF. The gateway preserves the
+  // backend's redirects and Set-Cookie headers, so real auth works on a free
+  // vercel.app hostname without cross-site cookies or a purchased domain.
+  return `/api/auth/oauth/${provider}`;
 }
 
 // Which social providers the backend has configured. In mock mode we advertise

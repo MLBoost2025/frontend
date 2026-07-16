@@ -35,12 +35,12 @@ test("problem arena route opens from problems list", async ({ page }) => {
 
   await page.getByRole("link", { name: "Problems" }).click();
   await page
-    .getByRole("button", { name: "Open KNN Classifier on Iris" })
+    .getByRole("button", { name: "Open Healthcare Feature Mean" })
     .click();
 
-  await expect(page).toHaveURL(/\/problems\/knn-classifier-iris/);
+  await expect(page).toHaveURL(/\/problems\/healthcare-feature-mean/);
   await expect(
-    page.getByRole("heading", { name: /knn classifier on iris/i })
+    page.getByRole("heading", { name: /healthcare feature mean/i })
   ).toBeVisible();
 });
 

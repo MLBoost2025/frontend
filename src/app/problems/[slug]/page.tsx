@@ -28,7 +28,7 @@ import { ProblemDetail, SubmissionRecord, SubmissionResult } from "@/types";
 import ThemeSwitcher from "@/app/components/ThemeSwitcher";
 
 const MonacoEditor = dynamic(
-  async () => (await import("@monaco-editor/react")).default,
+  async () => (await import("@/app/components/LocalMonacoEditor")).default,
   {
     ssr: false,
     loading: () => (
@@ -131,7 +131,7 @@ function ResultView({ result }: { result: SubmissionResult | null }) {
         <p className="mt-1.5 text-xs text-zinc-600 dark:text-zinc-300">{result.message}</p>
         <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-500 dark:text-zinc-400">
           <span>
-            {result.mode === "run" ? "Sample" : "Hidden"} tests:{" "}
+            {result.mode === "run" ? "Sample" : "Practice"} tests:{" "}
             <span className="font-medium text-zinc-700 dark:text-zinc-200">
               {result.passedCount}/{result.totalCount}
             </span>
@@ -698,7 +698,7 @@ export default function ProblemArenaPage() {
                   <div className="rounded-xl bg-zinc-50/80 p-5 text-sm text-zinc-600 dark:bg-white/[0.025] dark:text-zinc-300">
                     Editorial unlocks after an{" "}
                     <span className="font-semibold text-emerald-600 dark:text-emerald-400">Accepted</span>{" "}
-                    submission on hidden tests.
+                    check against the full local practice suite.
                   </div>
                 )
               ) : null}
@@ -821,7 +821,7 @@ export default function ProblemArenaPage() {
                         Sample tests
                       </SegButton>
                       <SegButton active={activeConsoleTab === "hidden"} onClick={() => setActiveConsoleTab("hidden")}>
-                        Hidden tests
+                        Practice suite
                       </SegButton>
                     </div>
                     <button

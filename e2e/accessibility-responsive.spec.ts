@@ -18,11 +18,11 @@ test("mobile navigation keeps content visible and supports keyboard problem navi
   await page.getByRole("button", { name: "Close sidebar" }).click();
 
   await page
-    .getByRole("button", { name: "Open KNN Classifier on Iris" })
+    .getByRole("button", { name: "Open Healthcare Feature Mean" })
     .press("Enter");
-  await expect(page).toHaveURL(/\/problems\/knn-classifier-iris/);
+  await expect(page).toHaveURL(/\/problems\/healthcare-feature-mean/);
   await expect(
-    page.getByRole("heading", { name: "KNN Classifier on Iris" })
+    page.getByRole("heading", { name: "Healthcare Feature Mean" })
   ).toBeVisible();
 });
 

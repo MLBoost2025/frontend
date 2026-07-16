@@ -14,6 +14,7 @@ describe("live API contract", () => {
     vi.stubEnv("NEXT_PUBLIC_API_MODE", "live");
     vi.stubEnv("NEXT_PUBLIC_API_FALLBACK_TO_MOCK", "false");
     vi.stubEnv("NEXT_PUBLIC_API_URL", "https://api.example.test/api");
+    vi.stubEnv("NEXT_PUBLIC_EXECUTION_MODE", "server");
     window.localStorage.clear();
   });
 

@@ -132,7 +132,7 @@ export interface SubmissionResult {
   totalCount: number;
   traceback?: string;
   testCases: SubmissionTestCaseResult[];
-  source: "mock" | "live";
+  source: "mock" | "live" | "browser";
   submittedAt: string;
 }
 

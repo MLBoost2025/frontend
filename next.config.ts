@@ -33,7 +33,9 @@ const contentSecurityPolicy = [
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
   "style-src 'self' 'unsafe-inline'",
-  `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "production" ? "" : " 'unsafe-eval'"}`,
+  // Pyodide compiles the locally served CPython WebAssembly module. The
+  // narrowly-scoped wasm token does not permit JavaScript eval.
+  `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'${process.env.NODE_ENV === "production" ? "" : " 'unsafe-eval'"}`,
   `connect-src 'self'${apiOrigin ? ` ${apiOrigin}` : ""} https://*.ingest.sentry.io`,
   "worker-src 'self' blob:",
   ...(process.env.NODE_ENV === "production" ? ["upgrade-insecure-requests"] : []),
@@ -57,7 +59,13 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: ["127.0.0.1"],
   turbopack: { root: __dirname },
   async headers() {
-    return [{ source: "/(.*)", headers: securityHeaders }];
+    return [
+      { source: "/(.*)", headers: securityHeaders },
+      {
+        source: "/pyodide/:path*",
+        headers: [{ key: "Cache-Control", value: "public, max-age=604800, stale-while-revalidate=31536000" }],
+      },
+    ];
   },
 };
 
