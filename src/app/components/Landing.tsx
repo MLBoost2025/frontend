@@ -115,7 +115,7 @@ export default function Landing() {
               <span className="h-2.5 w-2.5 rounded-full bg-rose-400/70" />
               <span className="h-2.5 w-2.5 rounded-full bg-brand-300/90" />
               <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/70" />
-              <span className="ml-3 font-mono text-xs text-zinc-400">knn-classifier-iris · main.py</span>
+              <span className="ml-3 font-mono text-xs text-zinc-400">healthcare-feature-mean · main.py</span>
             </div>
             <div className="grid gap-0 sm:grid-cols-[1.1fr_1fr]">
               <pre className="overflow-x-auto border-b border-black/[0.05] p-5 font-mono text-[12.5px] leading-6 text-zinc-600 dark:border-white/[0.06] dark:text-zinc-300 sm:border-b-0 sm:border-r">
@@ -131,7 +131,7 @@ export default function Landing() {
               </pre>
               <div className="space-y-3 p-5">
                 <div className="flex items-center gap-2 rounded-xl bg-emerald-500/[0.08] px-3.5 py-2.5 text-sm font-semibold text-emerald-600 ring-1 ring-inset ring-emerald-500/20 dark:text-emerald-400">
-                  <ShieldCheck className="h-4 w-4" /> Accepted · 6/6 hidden tests
+                  <ShieldCheck className="h-4 w-4" /> Accepted · 8/8 practice tests
                 </div>
                 <div className="flex flex-wrap gap-2 text-xs">
                   {["Runtime 114ms", "Memory 28MB", "Easy"].map((m) => (
@@ -144,8 +144,8 @@ export default function Landing() {
                   ))}
                 </div>
                 <p className="text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">
-                  Every submit is judged against hidden test cases with runtime &
-                  memory — just like a real interview.
+                  Python runs in an isolated browser worker against deterministic
+                  practice tests, with instant case-level feedback.
                 </p>
               </div>
             </div>

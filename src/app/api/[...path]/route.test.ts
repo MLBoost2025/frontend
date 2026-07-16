@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { NextRequest } from "next/server";
-import { POST } from "./route";
+import { GET, POST } from "./route";
 
 function request(origin: string, body = "{}") {
   const nextUrl = new URL("http://internal:3000/api/auth/login");
@@ -47,6 +47,38 @@ describe("same-origin API gateway", () => {
     expect(response.headers.get("x-request-id")).toBe("trace-1");
     expect(await response.json()).toEqual({ ok: true });
     expect(String(fetchMock.mock.calls[0][0])).toBe("https://backend.internal/api/auth/login");
-    expect(fetchMock.mock.calls[0][1]).toEqual(expect.objectContaining({ method: "POST", cache: "no-store" }));
+    expect(fetchMock.mock.calls[0][1]).toEqual(expect.objectContaining({
+      method: "POST",
+      cache: "no-store",
+      redirect: "manual",
+    }));
+  });
+
+  it("passes OAuth redirects and cookies back to the browser without following them", async () => {
+    vi.stubEnv("BACKEND_API_URL", "https://backend.internal/api");
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, {
+      status: 302,
+      headers: {
+        location: "https://accounts.example.test/authorize",
+        "set-cookie": "katalume_oauth_state=state; Path=/; HttpOnly; Secure; SameSite=Lax",
+      },
+    }));
+    vi.stubGlobal("fetch", fetchMock);
+    const nextUrl = new URL("https://app.example.com/api/auth/oauth/google");
+    const oauthRequest = {
+      method: "GET",
+      headers: new Headers({ host: "app.example.com", "x-forwarded-proto": "https" }),
+      nextUrl,
+      arrayBuffer: async () => new ArrayBuffer(0),
+    } as unknown as NextRequest;
+
+    const response = await GET(oauthRequest, {
+      params: Promise.resolve({ path: ["auth", "oauth", "google"] }),
+    });
+
+    expect(response.status).toBe(302);
+    expect(response.headers.get("location")).toBe("https://accounts.example.test/authorize");
+    expect(response.headers.get("set-cookie")).toContain("katalume_oauth_state=state");
+    expect(fetchMock.mock.calls[0][1]).toEqual(expect.objectContaining({ redirect: "manual" }));
   });
 });

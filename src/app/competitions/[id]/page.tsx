@@ -21,6 +21,7 @@ function statusLabel(contest: CompetitionDetail): string {
 }
 
 export default function CompetitionDetailPage() {
+  const rankedEnabled = process.env.NEXT_PUBLIC_EXECUTION_MODE === "server";
   const params = useParams<{ id: string }>();
   const { isAuthenticated } = useAuth();
   const [contest, setContest] = useState<CompetitionDetail | null>(null);
@@ -70,7 +71,7 @@ export default function CompetitionDetailPage() {
               </div>
               <div className="mt-6">
                 {isAuthenticated ? (
-                  <button type="button" onClick={() => void register()} disabled={registering || registered || contest.status === "ended"} className="rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-brand-800 shadow-sm transition hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-60">{registered ? "Registered" : registering ? "Registering…" : contest.status === "ended" ? "Contest ended" : "Register"}</button>
+                  <button type="button" onClick={() => void register()} disabled={!rankedEnabled || registering || registered || contest.status === "ended"} className="rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-brand-800 shadow-sm transition hover:bg-brand-50 disabled:cursor-not-allowed disabled:opacity-60">{!rankedEnabled ? "Ranked launch coming soon" : registered ? "Registered" : registering ? "Registering…" : contest.status === "ended" ? "Contest ended" : "Register"}</button>
                 ) : <Link href="/login" className="inline-flex rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-brand-800 shadow-sm">Sign in to register</Link>}
               </div>
             </div>
@@ -81,7 +82,7 @@ export default function CompetitionDetailPage() {
               <p className="eyebrow">Problems</p>
               <div className="mt-4 space-y-3">
                 {contest.problems.length === 0 ? <p className="text-sm text-zinc-500">Problems will appear when the contest opens.</p> : contest.problems.map((problem, index) => (
-                  <Link key={problem.id} href={`/problems/${problem.slug}?contest=${encodeURIComponent(contest.id)}`} className="flex items-center justify-between rounded-2xl bg-zinc-100/70 p-4 transition hover:bg-brand-50 dark:bg-white/[0.04] dark:hover:bg-brand-500/[0.08]">
+                  <Link key={problem.id} href={rankedEnabled ? `/problems/${problem.slug}?contest=${encodeURIComponent(contest.id)}` : `/problems/${problem.slug}`} className="flex items-center justify-between rounded-2xl bg-zinc-100/70 p-4 transition hover:bg-brand-50 dark:bg-white/[0.04] dark:hover:bg-brand-500/[0.08]">
                     <span className="font-semibold text-zinc-900 dark:text-zinc-100">{index + 1}. {problem.title}</span>
                     <span className={`rounded-full px-3 py-1 text-xs font-semibold ${difficultyClass(problem.difficulty)}`}>{problem.difficulty}</span>
                   </Link>

@@ -15,7 +15,8 @@ Built with Next.js 16 (App Router) and React 19.
 
 - Next.js 16 (App Router) + React 19, TypeScript
 - Tailwind CSS v4, `next-themes` (light/dark)
-- Monaco editor (`@monaco-editor/react`) for the solve arena
+- Locally bundled Monaco editor + Pyodide CPython practice sandbox
+- 126 deterministic problems: 42 Easy, 42 Medium, 42 Hard
 - Sentry for error tracking + tracing
 - Vitest + Testing Library (unit), Playwright (e2e)
 
@@ -42,6 +43,7 @@ See [.env.example](.env.example) for all variables. Key ones:
 | `BACKEND_API_URL` | Server-only private backend base URL used by the same-origin BFF |
 | `NEXT_PUBLIC_SITE_URL` | Canonical public HTTPS origin |
 | `NEXT_PUBLIC_API_FALLBACK_TO_MOCK` | In live mode, fall back to mock on API error. Set `false` in production so failures surface |
+| `NEXT_PUBLIC_EXECUTION_MODE` | `browser` for the free local practice judge; `server` for a future isolated judge |
 | `NEXT_PUBLIC_SENTRY_DSN` / `SENTRY_DSN` | Sentry client / server DSNs (capture is off unless set) |
 
 **Mock vs live:** every data call goes through a switch in
@@ -49,6 +51,17 @@ See [.env.example](.env.example) for all variables. Key ones:
 data so the UI is fully usable offline. In `live`/`auto` mode it calls the
 same-origin `/api` BFF with Secure/HttpOnly cookies and, unless
 `NEXT_PUBLIC_API_FALLBACK_TO_MOCK=false`, falls back to mock data on error.
+OAuth also starts and returns through this gateway. This keeps the session
+first-party on either a free `vercel.app` hostname or a future custom domain.
+
+Practice execution is separate from API mode. The free public beta uses an
+exact, pinned CPython WebAssembly runtime in a disposable Web Worker. Run checks
+the two visible examples; Submit checks the full local suite (8 Easy, 25 Medium,
+50 Hard). These are practice tests—not secret or ranked contest tests. A server
+judge can be enabled later without changing problem or submission contracts.
+During the free beta, practice history and solved progress stay in that browser's
+local storage; account-synced judging and ranked contests remain disabled until
+the isolated server judge is enabled.
 
 ## Scripts
 
@@ -89,5 +102,5 @@ then e2e against a production build.
 
 Optimized for [Vercel](https://vercel.com/). Set the production env vars
 (`NEXT_PUBLIC_API_MODE=live`, `BACKEND_API_URL`, `NEXT_PUBLIC_SITE_URL`, mock
-fallback disabled, and Sentry DSNs) in the
+fallback disabled, `NEXT_PUBLIC_EXECUTION_MODE=browser`, and Sentry DSNs) in the
 project settings before deploying.

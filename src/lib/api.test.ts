@@ -1,4 +1,10 @@
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
+
+const runPythonInBrowserMock = vi.hoisted(() => vi.fn());
+vi.mock("@/lib/browserPython", () => ({
+  runPythonInBrowser: runPythonInBrowserMock,
+}));
+
 import {
   fetchCompetitions,
   fetchLeaderboard,
@@ -18,6 +24,33 @@ describe("mock api", () => {
     vi.useFakeTimers();
     window.localStorage.clear();
     document.cookie = "katalume_auth=; path=/; max-age=0";
+    runPythonInBrowserMock.mockImplementation(
+      async (problemId: string, code: string, mode: "run" | "submit") => {
+        const accepted = !/\bpass\b|NotImplementedError/.test(code);
+        const totalCount = mode === "run" ? 2 : 8;
+        const passedCount = accepted ? totalCount : 0;
+        return {
+          submissionId: `local_${Date.now()}`,
+          problemId,
+          mode,
+          visibility: mode === "run" ? "sample" : "hidden",
+          status: accepted ? "Accepted" : "Failed",
+          runtimeMs: 10,
+          memoryMb: 0,
+          score: accepted ? 100 : 0,
+          passedCount,
+          totalCount,
+          message: accepted ? "Passed locally." : "Practice tests failed.",
+          testCases: Array.from({ length: totalCount }, (_, index) => ({
+            name: `Test ${index + 1}`,
+            visibility: mode === "run" ? "sample" : "hidden",
+            passed: accepted,
+          })),
+          source: "browser",
+          submittedAt: new Date().toISOString(),
+        };
+      }
+    );
   });
 
   afterEach(() => {
@@ -57,6 +90,32 @@ describe("mock api", () => {
     expect(result.testCases.every((testCase) => testCase.passed)).toBe(true);
   });
 
+  it("uses the slug catalog key when the live problem id is a database id", async () => {
+    const result = await runCode(
+      "66f1234567890abcdef12345",
+      "def solve(payload): return 1",
+      "healthcare-feature-mean"
+    );
+
+    expect(result.problemId).toBe("66f1234567890abcdef12345");
+    expect(runPythonInBrowserMock).toHaveBeenCalledWith(
+      "66f1234567890abcdef12345",
+      expect.any(String),
+      "run",
+      expect.arrayContaining([expect.objectContaining({ isPublic: true })])
+    );
+
+    const historyPromise = fetchSubmissionHistory("healthcare-feature-mean");
+    await vi.runAllTimersAsync();
+    const history = await historyPromise;
+    expect(history[0]).toEqual(
+      expect.objectContaining({
+        problemId: "66f1234567890abcdef12345",
+        problemSlug: "healthcare-feature-mean",
+      })
+    );
+  });
+
   it("returns failed status for placeholder submission", async () => {
     const submitPromise = submitSolution(
       "p-001",
@@ -83,7 +142,7 @@ describe("mock api", () => {
     const history = await historyPromise;
 
     expect(history.length).toBeGreaterThan(0);
-    expect(history[0].result.source).toBe("mock");
+    expect(history[0].result.source).toBe("browser");
   });
 
   it("derives user stats from mock submission history", async () => {

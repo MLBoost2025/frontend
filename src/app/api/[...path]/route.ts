@@ -53,6 +53,11 @@ async function forward(request: NextRequest, context: { params: Promise<{ path: 
       headers,
       body: requestBody,
       cache: "no-store",
+      // OAuth endpoints answer with redirects that must be completed by the
+      // user's browser. Following them here would send the provider's login
+      // page back as an API response and prevent cookies from being set on the
+      // public web-app origin.
+      redirect: "manual",
       signal: AbortSignal.timeout(10000),
     });
   } catch {
