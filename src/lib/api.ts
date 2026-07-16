@@ -336,7 +336,8 @@ function createSubmissionRecord(
   code: string,
   mode: ExecutionMode,
   result: SubmissionResult,
-  problemIdentifier = problemId
+  problemIdentifier = problemId,
+  fallbackTitle?: string
 ): SubmissionRecord {
   const problem = getProblemByIdentifier(problemIdentifier);
 
@@ -344,7 +345,10 @@ function createSubmissionRecord(
     id: result.submissionId,
     problemId,
     problemSlug: problem?.slug || problemId,
-    problemTitle: problem?.title || "Unknown Problem",
+    // Problems served by the live backend (e.g. imported pipeline problems)
+    // are not in the bundled catalog, so fall back to the title the arena
+    // passes through instead of showing "Unknown Problem".
+    problemTitle: problem?.title || fallbackTitle || "Unknown Problem",
     code,
     mode,
     result,
@@ -686,9 +690,10 @@ async function persistExecutionRecord(
   code: string,
   mode: ExecutionMode,
   result: SubmissionResult,
-  problemIdentifier = problemId
+  problemIdentifier = problemId,
+  fallbackTitle?: string
 ): Promise<void> {
-  const record = createSubmissionRecord(problemId, code, mode, result, problemIdentifier);
+  const record = createSubmissionRecord(problemId, code, mode, result, problemIdentifier, fallbackTitle);
 
   // Cache local and legacy mock results. In live mode the backend is the source
   // of truth for history and solved-state; caching live results here would
@@ -985,13 +990,11 @@ export async function runCode(
   problemId: string,
   code: string,
   problemSlug?: string,
-  _problemTitle?: string
+  problemTitle?: string
 ): Promise<SubmissionResult> {
-  void _problemTitle;
-
   if (EXECUTION_ADAPTER === "browser") {
     const result = await browserExecute(problemId, code, "run", problemSlug);
-    await persistExecutionRecord(problemId, code, "run", result, problemSlug);
+    await persistExecutionRecord(problemId, code, "run", result, problemSlug, problemTitle);
     return result;
   }
 
@@ -999,7 +1002,7 @@ export async function runCode(
   const liveExecutor = async () => liveExecute(problemId, code, "run");
 
   const result = await runWithBackendSwitch("run_code", liveExecutor, mockExecutor);
-  await persistExecutionRecord(problemId, code, "run", result, problemSlug);
+  await persistExecutionRecord(problemId, code, "run", result, problemSlug, problemTitle);
   return result;
 }
 
@@ -1009,19 +1012,18 @@ export async function submitSolution(
   _languageId = 71,
   _token?: string,
   problemSlug?: string,
-  _problemTitle?: string,
+  problemTitle?: string,
   contestId?: string
 ): Promise<SubmissionResult> {
   void _languageId;
   void _token;
-  void _problemTitle;
 
   if (EXECUTION_ADAPTER === "browser") {
     if (contestId) {
       throw new Error("Ranked contests require the server judge and are not available in local practice mode.");
     }
     const result = await browserExecute(problemId, code, "submit", problemSlug);
-    await persistExecutionRecord(problemId, code, "submit", result, problemSlug);
+    await persistExecutionRecord(problemId, code, "submit", result, problemSlug, problemTitle);
     return result;
   }
 
@@ -1029,7 +1031,7 @@ export async function submitSolution(
   const liveExecutor = async () => liveExecute(problemId, code, "submit", contestId);
 
   const result = await runWithBackendSwitch("submit_code", liveExecutor, mockExecutor);
-  await persistExecutionRecord(problemId, code, "submit", result, problemSlug);
+  await persistExecutionRecord(problemId, code, "submit", result, problemSlug, problemTitle);
   return result;
 }
 

@@ -126,4 +126,48 @@ describe("live API contract", () => {
       testcases
     );
   });
+
+  it("records the arena-supplied title for problems outside the bundled catalog", async () => {
+    vi.stubEnv("NEXT_PUBLIC_EXECUTION_MODE", "browser");
+    const testcases = [{ input: '{"value":1}', expectedOutput: "1", isPublic: true }];
+    const fetchMock = vi.fn().mockResolvedValue(
+      jsonResponse({ problemId: "imported-1", slug: "viterbi-decoding", testcaseVersion: 1, testcases })
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    runPythonInBrowserMock.mockResolvedValue({
+      submissionId: "local-2",
+      problemId: "imported-1",
+      mode: "submit",
+      visibility: "hidden",
+      status: "Accepted",
+      runtimeMs: 5,
+      memoryMb: 0,
+      score: 100,
+      passedCount: 8,
+      totalCount: 8,
+      message: "Passed.",
+      testCases: [],
+      source: "browser",
+      submittedAt: new Date().toISOString(),
+    });
+
+    const { submitSolution } = await import("./api");
+    // "viterbi-decoding" is an imported problem, absent from the bundled
+    // catalog, so metadata resolution must fall back to the passed title.
+    await submitSolution(
+      "imported-1",
+      "def solve(payload): return 1",
+      71,
+      undefined,
+      "viterbi-decoding",
+      "Viterbi Decoding"
+    );
+
+    const stored = JSON.parse(
+      window.localStorage.getItem("katalume.submission.history") || "[]"
+    );
+    expect(stored.length).toBeGreaterThan(0);
+    expect(stored[0].problemTitle).toBe("Viterbi Decoding");
+    expect(stored[0].problemTitle).not.toBe("Unknown Problem");
+  });
 });
