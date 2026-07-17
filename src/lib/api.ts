@@ -260,6 +260,63 @@ function getProblemByIdentifier(identifier: string): ProblemDetail | undefined {
   );
 }
 
+// Lightweight metadata for a problem, enough to attribute a solve to its
+// difficulty and topic. Problems served by the live backend are not in the
+// bundled catalog, so we remember their metadata when the arena opens them
+// (see fetchProblemBySlug) and consult it wherever the bundle lookup misses,
+// keeping progress views consistent for imported problems.
+interface ProblemMeta {
+  slug: string;
+  id: string;
+  title: string;
+  difficulty: Difficulty;
+  category: string;
+}
+
+const PROBLEM_META_KEY = "katalume.problem.meta";
+
+function rememberProblemMeta(problem: ProblemDetail): void {
+  if (!isBrowser()) return;
+  try {
+    const raw = window.localStorage.getItem(PROBLEM_META_KEY);
+    const store = (raw ? JSON.parse(raw) : {}) as Record<string, ProblemMeta>;
+    const meta: ProblemMeta = {
+      slug: problem.slug,
+      id: problem.id,
+      title: problem.title,
+      difficulty: problem.difficulty,
+      category: problem.category,
+    };
+    store[problem.slug] = meta;
+    store[problem.id] = meta;
+    window.localStorage.setItem(PROBLEM_META_KEY, JSON.stringify(store));
+  } catch {
+    // Best-effort cache; ignore quota/serialization errors.
+  }
+}
+
+function resolveProblemMeta(identifier: string): ProblemMeta | undefined {
+  const bundled = getProblemByIdentifier(identifier);
+  if (bundled) {
+    return {
+      slug: bundled.slug,
+      id: bundled.id,
+      title: bundled.title,
+      difficulty: bundled.difficulty,
+      category: bundled.category,
+    };
+  }
+  if (!isBrowser()) return undefined;
+  try {
+    const raw = window.localStorage.getItem(PROBLEM_META_KEY);
+    if (!raw) return undefined;
+    const store = JSON.parse(raw) as Record<string, ProblemMeta>;
+    return store[identifier];
+  } catch {
+    return undefined;
+  }
+}
+
 function readSubmissionHistoryStore(): SubmissionRecord[] {
   if (!isBrowser()) {
     return [];
@@ -773,6 +830,24 @@ function buildTopicProgress(history: SubmissionRecord[]): TopicProgressPoint[] {
     topicTotals.set(problem.category, existing);
   });
 
+  // Fold in solved problems served by the live backend (not in the bundle),
+  // attributed to their topic via remembered metadata, so topic coverage
+  // reflects imported solves instead of staying at zero.
+  const catalogIds = new Set(MOCK_PROBLEMS.map((problem) => problem.id));
+  const importedSolved = new Map<string, ProblemMeta>();
+  for (const entry of history) {
+    if (entry.mode !== "submit" || entry.result.status !== "Accepted") continue;
+    if (catalogIds.has(entry.problemId)) continue;
+    const meta = resolveProblemMeta(entry.problemSlug) || resolveProblemMeta(entry.problemId);
+    if (meta) importedSolved.set(meta.slug, meta);
+  }
+  for (const meta of importedSolved.values()) {
+    const existing = topicTotals.get(meta.category) || { solved: 0, total: 0 };
+    existing.solved += 1;
+    existing.total += 1;
+    topicTotals.set(meta.category, existing);
+  }
+
   return Array.from(topicTotals.entries()).map(([topic, data]) => ({
     topic,
     solved: data.solved,
@@ -983,7 +1058,11 @@ export async function fetchProblemBySlug(slug: string): Promise<ProblemDetail> {
 
   const liveExecutor = async () => liveFetchProblemBySlug(slug);
 
-  return runWithBackendSwitch("fetch_problem_detail", liveExecutor, mockExecutor);
+  const detail = await runWithBackendSwitch("fetch_problem_detail", liveExecutor, mockExecutor);
+  // Remember metadata so a later solve of a non-bundled (imported) problem can
+  // still be attributed to its title, difficulty and topic.
+  rememberProblemMeta(detail);
+  return detail;
 }
 
 export async function runCode(
@@ -1140,6 +1219,14 @@ export async function fetchCompanyTracks(): Promise<CompanyTrack[]> {
 }
 
 export async function fetchUserProfile(): Promise<UserProfile> {
+  // When code runs in the browser (Pyodide), solves are recorded to local
+  // history and never reach the backend, so the profile must be derived from
+  // that same local history — matching fetchUserStats / fetchUserProgress /
+  // fetchRecentActivity. Reading /profile/me here would show 0 solved while
+  // the dashboard shows the real count (the split-brain QA flagged).
+  if (EXECUTION_ADAPTER === "browser") {
+    return mockFetchUserProfile();
+  }
   return runWithBackendSwitch(
     "fetch_user_profile",
     () => liveFetchUserProfile(),
@@ -1218,6 +1305,7 @@ async function mockFetchUserStats(): Promise<UserStats> {
     Medium: { solved: 0, total: 0 },
     Hard: { solved: 0, total: 0 },
   };
+  const catalogSlugs = new Set(MOCK_PROBLEMS.map((problem) => problem.slug));
   for (const problem of MOCK_PROBLEMS) {
     const bucket = byDifficulty[problem.difficulty];
     if (bucket) {
@@ -1225,9 +1313,22 @@ async function mockFetchUserStats(): Promise<UserStats> {
       if (solved.has(problem.slug)) bucket.solved += 1;
     }
   }
+  // Imported (non-bundled) problems: attribute their solves to the right
+  // difficulty via remembered metadata so the widget isn't stuck at 0.
+  let importedSolved = 0;
+  for (const slug of solved) {
+    if (catalogSlugs.has(slug)) continue;
+    const meta = resolveProblemMeta(slug);
+    const bucket = meta ? byDifficulty[meta.difficulty] : undefined;
+    if (bucket) {
+      bucket.solved += 1;
+      bucket.total += 1;
+      importedSolved += 1;
+    }
+  }
 
   return {
-    totalProblems: MOCK_PROBLEMS.length,
+    totalProblems: MOCK_PROBLEMS.length + importedSolved,
     solved: solved.size,
     attempted: attempted.size,
     totalSubmissions: history.length,

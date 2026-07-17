@@ -170,4 +170,79 @@ describe("live API contract", () => {
     expect(stored[0].problemTitle).toBe("Viterbi Decoding");
     expect(stored[0].problemTitle).not.toBe("Unknown Problem");
   });
+
+  function acceptedRecord(overrides: Record<string, unknown>) {
+    return {
+      id: "s",
+      problemId: "p",
+      problemSlug: "s",
+      problemTitle: "P",
+      code: "",
+      mode: "submit",
+      createdAt: new Date().toISOString(),
+      result: {
+        submissionId: "s",
+        problemId: "p",
+        mode: "submit",
+        visibility: "hidden",
+        status: "Accepted",
+        runtimeMs: 1,
+        memoryMb: 0,
+        score: 100,
+        passedCount: 8,
+        totalCount: 8,
+        message: "ok",
+        testCases: [],
+        source: "browser",
+        submittedAt: new Date().toISOString(),
+      },
+      ...overrides,
+    };
+  }
+
+  it("derives the profile from local history in browser mode, never from /profile/me", async () => {
+    vi.stubEnv("NEXT_PUBLIC_EXECUTION_MODE", "browser");
+    window.localStorage.setItem(
+      "katalume.submission.history",
+      JSON.stringify([acceptedRecord({ problemId: "p-1", problemSlug: "any-slug" })])
+    );
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse({ totalSolved: 0, acceptanceRate: 0 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { fetchUserProfile } = await import("./api");
+    const profile = await fetchUserProfile();
+
+    // Reflects the local browser-execution history (matching the dashboard),
+    // and must not fall back to the backend's 0-solved /profile/me.
+    expect(profile.totalSolved).toBe(1);
+    expect(fetchMock.mock.calls.every((call) => !String(call[0]).includes("/profile/me"))).toBe(true);
+  });
+
+  it("attributes solves of imported (non-bundled) problems to difficulty and topic", async () => {
+    vi.stubEnv("NEXT_PUBLIC_EXECUTION_MODE", "browser");
+    const meta = {
+      slug: "viterbi-decoding",
+      id: "imported-1",
+      title: "Viterbi Decoding",
+      difficulty: "Hard",
+      category: "NLP",
+    };
+    window.localStorage.setItem(
+      "katalume.problem.meta",
+      JSON.stringify({ "viterbi-decoding": meta, "imported-1": meta })
+    );
+    window.localStorage.setItem(
+      "katalume.submission.history",
+      JSON.stringify([acceptedRecord({ problemId: "imported-1", problemSlug: "viterbi-decoding" })])
+    );
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({})));
+
+    const { fetchUserStats, fetchUserProfile } = await import("./api");
+
+    const stats = await fetchUserStats();
+    expect(stats.byDifficulty.Hard.solved).toBeGreaterThanOrEqual(1);
+
+    const profile = await fetchUserProfile();
+    expect(profile.topicProgress.find((topic) => topic.topic === "NLP")?.solved).toBeGreaterThanOrEqual(1);
+  });
 });
