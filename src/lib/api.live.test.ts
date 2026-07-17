@@ -164,7 +164,7 @@ describe("live API contract", () => {
     );
 
     const stored = JSON.parse(
-      window.localStorage.getItem("katalume.submission.history") || "[]"
+      window.localStorage.getItem("katalume.submission.history.anon") || "[]"
     );
     expect(stored.length).toBeGreaterThan(0);
     expect(stored[0].problemTitle).toBe("Viterbi Decoding");
