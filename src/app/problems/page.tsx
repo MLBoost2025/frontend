@@ -76,6 +76,12 @@ export default function ProblemsPage() {
     };
   }, []);
 
+  // Incremental rendering: phones were mounting all ~200 rows at once. The
+  // visible window resets whenever the filter signature changes, without an
+  // effect, by keying the stored count to the signature.
+  const PAGE_SIZE = 45;
+  const [pageState, setPageState] = useState({ key: "", count: PAGE_SIZE });
+
   const filteredProblems = useMemo(() => {
     let list = [...problems];
 
@@ -137,6 +143,11 @@ export default function ProblemsPage() {
       </article>
     </section>
   );
+
+  const filterKey = [filters.level, filters.category, filters.statusFilter, searchQuery].join("|");
+  const visibleCount = pageState.key === filterKey ? pageState.count : PAGE_SIZE;
+  const visibleProblems = filteredProblems.slice(0, visibleCount);
+  const remaining = filteredProblems.length - visibleProblems.length;
 
   return (
     <MainLayout
@@ -232,7 +243,7 @@ export default function ProblemsPage() {
           </div>
         ) : (
           <ProblemsTable
-            problems={filteredProblems}
+            problems={visibleProblems}
             onProblemClick={(id) => {
               const problem = problems.find((item) => item.id === id);
               if (problem?.slug) {
@@ -241,6 +252,17 @@ export default function ProblemsPage() {
             }}
           />
         )}
+        {!isLoading && remaining > 0 ? (
+          <div className="flex justify-center pt-2">
+            <button
+              type="button"
+              onClick={() => setPageState({ key: filterKey, count: visibleCount + 60 })}
+              className="rounded-full border border-black/[0.08] px-5 py-2.5 text-sm font-medium text-zinc-700 transition hover:bg-zinc-100 dark:border-white/[0.1] dark:text-zinc-200 dark:hover:bg-white/[0.05]"
+            >
+              Load {Math.min(60, remaining)} more · {remaining} remaining
+            </button>
+          </div>
+        ) : null}
       </section>
     </MainLayout>
   );

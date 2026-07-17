@@ -49,6 +49,29 @@ const ALLOW_MOCK_FALLBACK = process.env.NEXT_PUBLIC_API_FALLBACK_TO_MOCK
 
 const MOCK_SESSION_KEY = "katalume.mock.session";
 const SUBMISSION_HISTORY_KEY = "katalume.submission.history";
+const ACTIVE_USER_KEY = "katalume.active.user";
+
+// Practice history is scoped per signed-in account so two people sharing a
+// browser never inherit each other's local progress. The marker holds only an
+// opaque user id (never a credential); anonymous practice uses "anon".
+function setActiveUser(userId: string | null): void {
+  if (!isBrowser()) return;
+  if (userId) window.localStorage.setItem(ACTIVE_USER_KEY, userId);
+  else window.localStorage.removeItem(ACTIVE_USER_KEY);
+}
+
+function submissionHistoryKey(): string {
+  if (!isBrowser()) return SUBMISSION_HISTORY_KEY;
+  const uid = window.localStorage.getItem(ACTIVE_USER_KEY) || "anon";
+  const scoped = `${SUBMISSION_HISTORY_KEY}.${uid}`;
+  // One-time migration: claim the old shared key for the current account.
+  const legacy = window.localStorage.getItem(SUBMISSION_HISTORY_KEY);
+  if (legacy !== null && window.localStorage.getItem(scoped) === null) {
+    window.localStorage.setItem(scoped, legacy);
+    window.localStorage.removeItem(SUBMISSION_HISTORY_KEY);
+  }
+  return scoped;
+}
 
 const FETCH_DELAY_MS = 420;
 const AUTH_DELAY_MS = 550;
@@ -190,6 +213,7 @@ export function getBackendMode(): ApiMode {
 }
 
 function persistSession(session: AuthSession): void {
+  setActiveUser(session.user?.id || null);
   if (!isBrowser()) {
     return;
   }
@@ -229,6 +253,7 @@ function readStoredSession(): AuthSession | null {
 }
 
 function clearStoredSession(): void {
+  setActiveUser(null);
   if (!isBrowser()) {
     return;
   }
@@ -295,6 +320,61 @@ function rememberProblemMeta(problem: ProblemDetail): void {
   }
 }
 
+// Cache metadata for EVERY problem the live backend lists (not just opened
+// ones) so difficulty denominators and topic totals reflect the full catalog
+// instead of the bundled subset.
+function rememberProblemList(problems: Problem[]): void {
+  if (!isBrowser()) return;
+  try {
+    const raw = window.localStorage.getItem(PROBLEM_META_KEY);
+    const store = (raw ? JSON.parse(raw) : {}) as Record<string, ProblemMeta>;
+    for (const problem of problems) {
+      if (!problem.slug || !problem.difficulty) continue;
+      const meta: ProblemMeta = {
+        slug: problem.slug,
+        id: problem.id,
+        title: problem.title,
+        difficulty: problem.difficulty,
+        category: (problem as { category?: string }).category || "General",
+      };
+      store[problem.slug] = meta;
+      store[problem.id] = meta;
+    }
+    window.localStorage.setItem(PROBLEM_META_KEY, JSON.stringify(store));
+  } catch {
+    // Best-effort cache; ignore quota/serialization errors.
+  }
+}
+
+// The union of bundled problems and every remembered live problem, deduped by
+// slug — the closest local view of the real catalog.
+function allKnownProblemMeta(): Map<string, ProblemMeta> {
+  const known = new Map<string, ProblemMeta>();
+  for (const problem of MOCK_PROBLEMS) {
+    known.set(problem.slug, {
+      slug: problem.slug,
+      id: problem.id,
+      title: problem.title,
+      difficulty: problem.difficulty,
+      category: problem.category,
+    });
+  }
+  if (isBrowser()) {
+    try {
+      const raw = window.localStorage.getItem(PROBLEM_META_KEY);
+      if (raw) {
+        const store = JSON.parse(raw) as Record<string, ProblemMeta>;
+        for (const meta of Object.values(store)) {
+          if (meta?.slug && !known.has(meta.slug)) known.set(meta.slug, meta);
+        }
+      }
+    } catch {
+      // fall back to the bundle alone
+    }
+  }
+  return known;
+}
+
 function resolveProblemMeta(identifier: string): ProblemMeta | undefined {
   const bundled = getProblemByIdentifier(identifier);
   if (bundled) {
@@ -322,7 +402,7 @@ function readSubmissionHistoryStore(): SubmissionRecord[] {
     return [];
   }
 
-  const raw = window.localStorage.getItem(SUBMISSION_HISTORY_KEY);
+  const raw = window.localStorage.getItem(submissionHistoryKey());
   if (!raw) {
     return [];
   }
@@ -331,7 +411,7 @@ function readSubmissionHistoryStore(): SubmissionRecord[] {
     const parsed = JSON.parse(raw) as SubmissionRecord[];
     return Array.isArray(parsed) ? parsed : [];
   } catch {
-    window.localStorage.removeItem(SUBMISSION_HISTORY_KEY);
+    window.localStorage.removeItem(submissionHistoryKey());
     return [];
   }
 }
@@ -342,7 +422,7 @@ function writeSubmissionHistoryStore(records: SubmissionRecord[]): void {
   }
 
   window.localStorage.setItem(
-    SUBMISSION_HISTORY_KEY,
+    submissionHistoryKey(),
     JSON.stringify(records.slice(0, 180))
   );
 }
@@ -1044,6 +1124,7 @@ export async function fetchProblems(options: { tags?: string[] } = {}): Promise<
 
   const liveExecutor = async () => {
     const data = await liveFetchProblems(tags);
+    rememberProblemList(data);
     return data;
   };
 
@@ -1305,30 +1386,28 @@ async function mockFetchUserStats(): Promise<UserStats> {
     Medium: { solved: 0, total: 0 },
     Hard: { solved: 0, total: 0 },
   };
-  const catalogSlugs = new Set(MOCK_PROBLEMS.map((problem) => problem.slug));
-  for (const problem of MOCK_PROBLEMS) {
-    const bucket = byDifficulty[problem.difficulty];
+  const known = allKnownProblemMeta();
+  for (const meta of known.values()) {
+    const bucket = byDifficulty[meta.difficulty];
     if (bucket) {
       bucket.total += 1;
-      if (solved.has(problem.slug)) bucket.solved += 1;
+      if (solved.has(meta.slug)) bucket.solved += 1;
     }
   }
-  // Imported (non-bundled) problems: attribute their solves to the right
-  // difficulty via remembered metadata so the widget isn't stuck at 0.
-  let importedSolved = 0;
+  // Solved problems we have no metadata for at all (e.g. cache cleared):
+  // still count them somewhere sensible rather than dropping them.
   for (const slug of solved) {
-    if (catalogSlugs.has(slug)) continue;
+    if (known.has(slug)) continue;
     const meta = resolveProblemMeta(slug);
     const bucket = meta ? byDifficulty[meta.difficulty] : undefined;
     if (bucket) {
       bucket.solved += 1;
       bucket.total += 1;
-      importedSolved += 1;
     }
   }
 
   return {
-    totalProblems: MOCK_PROBLEMS.length + importedSolved,
+    totalProblems: known.size,
     solved: solved.size,
     attempted: attempted.size,
     totalSubmissions: history.length,
@@ -1700,7 +1779,7 @@ const MOCK_LEARNING_TRACKS: LearningTrack[] = [
     slug: "pandas-for-interviews",
     title: "Pandas for Interviews",
     description: "Joins, groupby, window operations, and common data transforms.",
-    tags: ["data-preprocessing"],
+    tags: ["pandas", "preprocessing"],
     lessons: ["GroupBy Deep Dive", "Joins and Merges", "Window Functions"],
     lessonCount: 3,
   },
@@ -1867,7 +1946,7 @@ export async function clearSubmissionHistory(): Promise<void> {
   if (!isBrowser()) {
     return;
   }
-  window.localStorage.removeItem(SUBMISSION_HISTORY_KEY);
+  window.localStorage.removeItem(submissionHistoryKey());
 }
 
 // ----- Social login (OAuth) -----
