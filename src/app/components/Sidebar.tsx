@@ -80,7 +80,7 @@ export default function Sidebar({
       >
         {/* Brand */}
         <div className="flex h-16 items-center justify-between px-4">
-          <Link href="/" className="group flex items-center gap-2.5">
+          <Link href="/" prefetch={false} className="group flex items-center gap-2.5">
             <BrandMark />
             <div className="leading-none">
               <span className="block text-[15px] font-bold tracking-tight text-zinc-900 dark:text-white">
@@ -115,6 +115,7 @@ export default function Sidebar({
                 <Link
                   key={item.href}
                   href={item.href}
+                  prefetch={false}
                   aria-current={isActive ? "page" : undefined}
                   className={`group relative flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition ${
                     isActive
