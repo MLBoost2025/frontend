@@ -246,6 +246,10 @@ export default function ProblemsPage() {
             problems={visibleProblems}
             onProblemClick={(id) => {
               const problem = problems.find((item) => item.id === id);
+              if (problem?.locked) {
+                router.push(`/pricing?from=${encodeURIComponent(`/problems/${problem.slug}`)}`);
+                return;
+              }
               if (problem?.slug) {
                 router.push(`/problems/${problem.slug}`);
               }

@@ -1,5 +1,8 @@
 import {
   AuthSession,
+  BillingCheckout,
+  BillingOffersResponse,
+  BillingSummary,
   CompanyTrack,
   Competition,
   CompetitionDetail,
@@ -497,6 +500,20 @@ function parseJsonSafely<T>(text: string): T {
   return JSON.parse(text) as T;
 }
 
+export class ApiError extends Error {
+  status: number;
+  code?: string;
+  upgradeUrl?: string;
+
+  constructor(status: number, message: string, code?: string, upgradeUrl?: string) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.code = code;
+    this.upgradeUrl = upgradeUrl;
+  }
+}
+
 async function fetchWithRetry<T>(
   path: string,
   init?: RequestInit,
@@ -545,9 +562,18 @@ async function fetchWithRetry<T>(
       }
 
       if (!response.ok) {
-        const message = await response.text();
-        const error: Error & { retryable?: boolean } = new Error(
-          `HTTP ${response.status}: ${message || "Request failed"}`
+        const raw = await response.text();
+        let detail: { message?: string; code?: string; upgradeUrl?: string } = {};
+        try {
+          detail = raw ? JSON.parse(raw) : {};
+        } catch {
+          detail = { message: raw };
+        }
+        const error: ApiError & { retryable?: boolean } = new ApiError(
+          response.status,
+          detail.message || "Request failed",
+          detail.code,
+          detail.upgradeUrl
         );
         // Client errors (4xx) are deterministic — retrying can't help. Only 5xx is retryable.
         error.retryable = response.status >= 500;
@@ -649,6 +675,8 @@ function toProblemFromLive(payload: unknown): Problem {
     summary: parsed.summary,
     companies: parsed.companies,
     trackIds: parsed.trackIds,
+    accessTier: parsed.accessTier,
+    locked: Boolean(parsed.locked),
   };
 }
 
@@ -1129,6 +1157,64 @@ export async function fetchProblems(options: { tags?: string[] } = {}): Promise<
   };
 
   return runWithBackendSwitch("fetch_problems", liveExecutor, mockExecutor);
+}
+
+const MOCK_BILLING_CONFIGURATION = {
+  billingEnabled: false,
+  checkoutEnabled: false,
+  enforcementEnabled: false,
+  provider: "disabled" as const,
+  environment: "sandbox" as const,
+};
+
+export async function fetchBillingOffers(): Promise<BillingOffersResponse> {
+  if (getNormalizedApiMode() === "mock") {
+    return {
+      offers: [
+        { offerKey: "plus_weekly_in_v1", name: "Plus Weekly", tier: "plus", cadence: "weekly", currency: "INR", amountMinor: 7900, benefits: ["all_problems", "interview_tracks", "premium_progress", "premium_profile"], popular: false },
+        { offerKey: "plus_monthly_in_v1", name: "Plus Monthly", tier: "plus", cadence: "monthly", currency: "INR", amountMinor: 24900, benefits: ["all_problems", "interview_tracks", "premium_progress", "premium_profile"], popular: true },
+        { offerKey: "plus_yearly_in_v1", name: "Plus Yearly", tier: "plus", cadence: "yearly", currency: "INR", amountMinor: 199900, benefits: ["all_problems", "interview_tracks", "premium_progress", "premium_profile"], popular: false },
+        { offerKey: "lumus_lifetime_in_v1", name: "Lumus Lifetime", tier: "lumus", cadence: "lifetime", currency: "INR", amountMinor: 499900, benefits: ["all_problems", "interview_tracks", "premium_progress", "premium_profile"], popular: false },
+      ],
+      configuration: MOCK_BILLING_CONFIGURATION,
+      freeProblemCount: 60,
+    };
+  }
+  return fetchWithRetry<BillingOffersResponse>("/billing/offers", { method: "GET" });
+}
+
+export async function fetchBillingSummary(): Promise<BillingSummary> {
+  if (getNormalizedApiMode() === "mock") {
+    return {
+      entitlement: { tier: "free", benefits: [], startsAt: null, endsAt: null },
+      subscription: null,
+      purchase: null,
+      configuration: MOCK_BILLING_CONFIGURATION,
+    };
+  }
+  return fetchWithRetry<BillingSummary>("/billing/summary", { method: "GET" });
+}
+
+export async function createBillingCheckout(
+  offerKey: string,
+  phone: string
+): Promise<BillingCheckout> {
+  return fetchWithRetry<BillingCheckout>("/billing/checkouts", {
+    method: "POST",
+    headers: { "Idempotency-Key": crypto.randomUUID() },
+    body: JSON.stringify({ offerKey, phone }),
+  });
+}
+
+export async function cancelBillingSubscription(subscriptionId: string): Promise<BillingSummary> {
+  return fetchWithRetry<BillingSummary>(
+    `/billing/subscriptions/${encodeURIComponent(subscriptionId)}/cancel`,
+    {
+      method: "POST",
+      headers: { "Idempotency-Key": crypto.randomUUID() },
+      body: "{}",
+    }
+  );
 }
 
 export async function fetchProblemBySlug(slug: string): Promise<ProblemDetail> {

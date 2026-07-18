@@ -16,12 +16,15 @@ import {
   RotateCw,
   SendHorizontal,
   XCircle,
+  LockKeyhole,
+  Sparkles,
 } from "lucide-react";
 import {
   fetchProblemBySlug,
   fetchSubmissionHistory,
   runCode,
   submitSolution,
+  ApiError,
 } from "@/lib/api";
 import { trackEvent } from "@/lib/analytics";
 import { ProblemDetail, SubmissionRecord, SubmissionResult } from "@/types";
@@ -224,6 +227,7 @@ export default function ProblemArenaPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isPlusRequired, setIsPlusRequired] = useState(false);
   const [isDesktop, setIsDesktop] = useState(true);
   const [isEditorialUnlocked, setIsEditorialUnlocked] = useState(false);
 
@@ -286,6 +290,7 @@ export default function ProblemArenaPage() {
       try {
         setIsLoadingProblem(true);
         setError(null);
+        setIsPlusRequired(false);
 
         const data = await fetchProblemBySlug(slug);
         if (!isActive) {
@@ -307,6 +312,9 @@ export default function ProblemArenaPage() {
           return;
         }
 
+        if (loadError instanceof ApiError && loadError.code === "PLUS_REQUIRED") {
+          setIsPlusRequired(true);
+        }
         const message =
           loadError instanceof Error ? loadError.message : "Unable to load problem.";
         setError(message);
@@ -520,15 +528,28 @@ export default function ProblemArenaPage() {
   if (error || !problem) {
     return (
       <div className="flex h-screen flex-col items-center justify-center gap-4 bg-white px-6 text-zinc-900 dark:bg-[#0a091e] dark:text-zinc-100">
+        {isPlusRequired ? (
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-500/10 text-brand-500">
+            <LockKeyhole className="h-5 w-5" />
+          </div>
+        ) : null}
+        {isPlusRequired ? <h1 className="text-2xl font-semibold">This arena is part of Katalume Plus</h1> : null}
         <p className="text-center text-sm text-zinc-600 dark:text-zinc-300">
           {error ?? "Problem could not be loaded."}
         </p>
-        <button
-          onClick={() => router.push("/problems")}
-          className="rounded-full border border-black/[0.07] px-4 py-2 text-sm transition hover:bg-zinc-100 dark:border-white/[0.08] dark:hover:bg-white/[0.05]"
-        >
-          Back to Problem List
-        </button>
+        <div className="flex gap-3">
+          {isPlusRequired ? (
+            <button onClick={() => router.push("/pricing")} className="btn-primary">
+              <Sparkles className="h-4 w-4" /> Explore Plus
+            </button>
+          ) : null}
+          <button
+            onClick={() => router.push("/problems")}
+            className="rounded-full border border-black/[0.07] px-4 py-2 text-sm transition hover:bg-zinc-100 dark:border-white/[0.08] dark:hover:bg-white/[0.05]"
+          >
+            Back to Problem List
+          </button>
+        </div>
       </div>
     );
   }

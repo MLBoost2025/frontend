@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import BrandMark from "./BrandMark";
+import { useBilling } from "@/context/BillingContext";
 
 interface SidebarProps {
   selectedCategory?: string;
@@ -50,6 +51,7 @@ export default function Sidebar({
   const pathname = usePathname();
   const router = useRouter();
   const { isAdmin, user } = useAuth();
+  const { tier, isPremium } = useBilling();
 
   const navItems = isAdmin
     ? [...NAV_ITEMS, { label: "Admin", href: "/admin", icon: ShieldCheck }]
@@ -159,19 +161,27 @@ export default function Sidebar({
           </div>
         </nav>
 
-        {/* Footer: upgrade / streak card */}
+        {/* Footer: membership / streak card */}
         <div className="p-3">
-          <div className="relative overflow-hidden rounded-2xl border border-brand-500/20 bg-gradient-to-br from-brand-500/[0.08] to-accent-500/[0.06] p-3">
+          <Link
+            href={isPremium ? "/billing" : "/pricing"}
+            prefetch={false}
+            className="relative block overflow-hidden rounded-2xl border border-brand-500/20 bg-gradient-to-br from-brand-500/[0.08] to-accent-500/[0.06] p-3 transition hover:border-brand-500/35"
+          >
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-brand-500" />
               <p className="text-xs font-semibold text-zinc-900 dark:text-white">
-                {user?.name ? `Hi, ${user.name.split(" ")[0]}` : "Level up"}
+                {isPremium
+                  ? tier === "lumus" ? "Lumus lifetime" : "Katalume Plus"
+                  : user?.name ? `Level up, ${user.name.split(" ")[0]}` : "Unlock Katalume Plus"}
               </p>
             </div>
             <p className="mt-1 text-[11px] leading-relaxed text-zinc-500 dark:text-zinc-400">
-              Solve a problem today to keep your streak alive.
+              {isPremium
+                ? "Your complete mastery arena is active."
+                : "Unlock every problem and premium mastery views."}
             </p>
-          </div>
+          </Link>
         </div>
       </aside>
 

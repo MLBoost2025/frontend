@@ -51,6 +51,8 @@ export const config = {
     "/tracks/:path*",
     "/progress/:path*",
     "/profile/:path*",
+    "/pricing/:path*",
+    "/billing/:path*",
     "/admin/:path*",
   ],
 };

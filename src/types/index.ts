@@ -32,6 +32,8 @@ export interface Problem {
   starterCode?: string;
   companies?: string[];
   trackIds?: string[];
+  accessTier?: "free" | "plus";
+  locked?: boolean;
 }
 
 export interface ProblemEditorial {
@@ -93,6 +95,73 @@ export interface AuthSession {
   accessToken?: string;
   expiresAt: string;
 }
+
+export type BillingTier = "free" | "plus" | "lumus";
+export type BillingCadence = "weekly" | "monthly" | "yearly" | "lifetime";
+
+export interface BillingOffer {
+  offerKey: string;
+  name: string;
+  tier: Exclude<BillingTier, "free">;
+  cadence: BillingCadence;
+  currency: "INR";
+  amountMinor: number;
+  benefits: string[];
+  popular: boolean;
+}
+
+export interface BillingConfiguration {
+  billingEnabled: boolean;
+  checkoutEnabled: boolean;
+  enforcementEnabled: boolean;
+  provider: "cashfree" | "disabled";
+  environment: "sandbox" | "production";
+}
+
+export interface BillingEntitlement {
+  tier: BillingTier;
+  benefits: string[];
+  startsAt: string | null;
+  endsAt: string | null;
+}
+
+export interface BillingSummary {
+  entitlement: BillingEntitlement;
+  subscription: {
+    id: string;
+    offerKey: string;
+    status: string;
+    currentPeriodEnd: string | null;
+    cancelAtPeriodEnd: boolean;
+  } | null;
+  purchase: {
+    id: string;
+    offerKey: string;
+    status: string;
+    capturedAt: string;
+  } | null;
+  configuration: BillingConfiguration;
+}
+
+export interface BillingOffersResponse {
+  offers: BillingOffer[];
+  configuration: BillingConfiguration;
+  freeProblemCount: number;
+}
+
+export type BillingCheckout =
+  | {
+      kind: "subscription";
+      subscriptionSessionId: string;
+      providerResourceId: string;
+      environment: "sandbox" | "production";
+    }
+  | {
+      kind: "payment";
+      paymentSessionId: string;
+      providerResourceId: string;
+      environment: "sandbox" | "production";
+    };
 
 export interface LoginPayload {
   email: string;

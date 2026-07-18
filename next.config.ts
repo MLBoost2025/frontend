@@ -35,8 +35,9 @@ const contentSecurityPolicy = [
   "style-src 'self' 'unsafe-inline'",
   // Pyodide compiles the locally served CPython WebAssembly module. The
   // narrowly-scoped wasm token does not permit JavaScript eval.
-  `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'${process.env.NODE_ENV === "production" ? "" : " 'unsafe-eval'"}`,
-  `connect-src 'self'${apiOrigin ? ` ${apiOrigin}` : ""} https://*.ingest.sentry.io`,
+  `script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://sdk.cashfree.com${process.env.NODE_ENV === "production" ? "" : " 'unsafe-eval'"}`,
+  `connect-src 'self'${apiOrigin ? ` ${apiOrigin}` : ""} https://api.cashfree.com https://sandbox.cashfree.com https://*.ingest.sentry.io`,
+  "frame-src https://sdk.cashfree.com https://api.cashfree.com https://sandbox.cashfree.com https://payments.cashfree.com https://payments-test.cashfree.com",
   "worker-src 'self' blob:",
   ...(process.env.NODE_ENV === "production" ? ["upgrade-insecure-requests"] : []),
 ].join("; ");

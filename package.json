@@ -20,6 +20,7 @@
     "test:e2e:headed": "playwright test --headed"
   },
   "dependencies": {
+    "@cashfreepayments/cashfree-js": "^1.0.7",
     "@monaco-editor/react": "^4.7.0",
     "@sentry/nextjs": "^10.42.0",
     "class-variance-authority": "^0.7.1",

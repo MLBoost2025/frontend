@@ -16,7 +16,9 @@ Built with Next.js 16 (App Router) and React 19.
 - Next.js 16 (App Router) + React 19, TypeScript
 - Tailwind CSS v4, `next-themes` (light/dark)
 - Locally bundled Monaco editor + Pyodide CPython practice sandbox
-- 126 deterministic problems: 42 Easy, 42 Medium, 42 Hard
+- 198 live practice problems with a stable 60-problem free catalog
+- Katalume Plus weekly/monthly/yearly and Lumus lifetime membership surfaces
+- Cashfree-hosted checkout; signed backend webhooks are the only access grant path
 - Sentry for error tracking + tracing
 - Vitest + Testing Library (unit), Playwright (e2e)
 
@@ -85,6 +87,7 @@ src/
     components/        shared UI (Navbar, Sidebar, ThemeSwitcher, ...)
   lib/api.ts           data layer with the mock/live switch
   context/AuthContext  auth state
+  context/BillingContext verified membership state
   proxy.ts             route gating through backend Session validation
 ```
 
@@ -97,6 +100,10 @@ npm run test:e2e       # Playwright (installs browsers on first run)
 
 CI (`.github/workflows/ci.yml`) runs lint, typecheck, unit tests, and build,
 then e2e against a production build.
+
+Billing UI is safe to deploy before commercial activation. If the backend
+reports checkout disabled, the pricing catalog is visible but no payment flow
+opens and no charge is attempted.
 
 ## Deploy
 
