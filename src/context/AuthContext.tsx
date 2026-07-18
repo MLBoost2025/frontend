@@ -8,14 +8,13 @@ import {
   useMemo,
   useState,
 } from "react";
-import { AuthSession, LoginPayload, SignupPayload, UpdateProfileInput, User } from "@/types";
-import {
-  getCurrentSession,
-  loginUser,
-  logoutUser,
-  signupUser,
-  updateUserProfile,
-} from "@/lib/api";
+import type {
+  AuthSession,
+  LoginPayload,
+  SignupPayload,
+  UpdateProfileInput,
+  User,
+} from "@/types";
 
 interface AuthContextValue {
   user: User | null;
@@ -39,6 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshSession = useCallback(async () => {
     setIsLoading(true);
     try {
+      const { getCurrentSession } = await import("@/lib/api");
       const currentSession = await getCurrentSession();
       setSession(currentSession);
     } finally {
@@ -53,6 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(async (payload: LoginPayload) => {
     setIsLoading(true);
     try {
+      const { loginUser } = await import("@/lib/api");
       const newSession = await loginUser(payload);
       setSession(newSession);
     } finally {
@@ -63,6 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signup = useCallback(async (payload: SignupPayload) => {
     setIsLoading(true);
     try {
+      const { signupUser } = await import("@/lib/api");
       const newSession = await signupUser(payload);
       setSession(newSession);
     } finally {
@@ -73,6 +75,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(async () => {
     setIsLoading(true);
     try {
+      const { logoutUser } = await import("@/lib/api");
       await logoutUser();
       setSession(null);
     } finally {
@@ -81,6 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const updateProfile = useCallback(async (input: UpdateProfileInput) => {
+    const { updateUserProfile } = await import("@/lib/api");
     const user = await updateUserProfile(input);
     setSession((current) => (current ? { ...current, user } : current));
     return user;
