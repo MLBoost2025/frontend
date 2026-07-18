@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Search } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import ThemeSwitcher from "./ThemeSwitcher";
+import MembershipBadge from "./MembershipBadge";
 
 interface NavbarProps {
   title?: string;
@@ -76,6 +77,9 @@ export default function Navbar({
       </form>
 
       <div className="flex items-center gap-2">
+        <div className="hidden sm:block">
+          <MembershipBadge compact />
+        </div>
         <ThemeSwitcher compact />
 
         <div className="mx-1 hidden h-6 w-px bg-zinc-200 dark:bg-white/10 sm:block" />

@@ -40,4 +40,31 @@ describe("ProblemsTable", () => {
 
     expect(screen.getByText(/no problems match your current filters/i)).toBeVisible();
   });
+
+  it("labels an enforced premium problem without hiding it", () => {
+    render(
+      <ProblemsTable
+        onProblemClick={vi.fn()}
+        problems={[
+          {
+            id: "premium-problem",
+            title: "Weighted Least Squares",
+            difficulty: "Hard",
+            category: "Supervised Learning",
+            acceptance: 42,
+            acceptanceRate: 42,
+            status: "unsolved",
+            tags: ["regression"],
+            accessTier: "plus",
+            locked: true,
+          },
+        ]}
+      />
+    );
+
+    expect(screen.getAllByText("Weighted Least Squares")).toHaveLength(2);
+    expect(screen.getByText("Plus")).toBeVisible();
+    expect(screen.getAllByRole("button", { name: "Open Weighted Least Squares" }))
+      .not.toHaveLength(0);
+  });
 });

@@ -5,6 +5,7 @@ import MainLayout from "../components/MainLayout";
 import { fetchUserProfile } from "@/lib/api";
 import { UserProfile } from "@/types";
 import { useAuth } from "@/context/AuthContext";
+import PremiumPanel from "../components/PremiumPanel";
 
 function heatLevelClass(count: number): string {
   if (count >= 5) {
@@ -89,6 +90,7 @@ export default function ProfilePage() {
         </div>
       ) : (
         <>
+          <PremiumPanel surface="profile" />
           <section className="card p-5 sm:p-6">
             <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-4">

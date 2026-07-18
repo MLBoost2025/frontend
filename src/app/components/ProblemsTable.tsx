@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2, Circle, CircleDashed } from "lucide-react";
+import { CheckCircle2, Circle, CircleDashed, LockKeyhole } from "lucide-react";
 import { Problem } from "@/types";
 
 interface ProblemsTableProps {
@@ -59,7 +59,10 @@ export default function ProblemsTable({
                 <span className="min-w-0 flex-1">
                   <span className="sr-only">{problem.status} status. </span>
                   <span className="block text-sm font-semibold text-zinc-800 transition-colors hover:text-brand-600 dark:text-zinc-100 dark:hover:text-brand-400">
-                    {problem.title}
+                    <span className="flex items-center gap-2">
+                      {problem.title}
+                      {problem.locked ? <LockKeyhole className="h-3.5 w-3.5 text-brand-500" /> : null}
+                    </span>
                   </span>
                   <span className="mt-2 flex flex-wrap gap-1.5">
                     {problem.tags.slice(0, 3).map((tag) => (
@@ -123,7 +126,14 @@ export default function ProblemsTable({
                     className="rounded-sm text-left font-medium text-zinc-800 transition-colors hover:text-brand-600 dark:text-zinc-100 dark:hover:text-brand-400"
                     aria-label={`Open ${problem.title}`}
                   >
-                    {problem.title}
+                    <span className="inline-flex items-center gap-2">
+                      {problem.title}
+                      {problem.locked ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-brand-500/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-brand-600 dark:text-brand-300">
+                          <LockKeyhole className="h-3 w-3" /> Plus
+                        </span>
+                      ) : null}
+                    </span>
                   </button>
                 </td>
                 <td className="px-2 py-3.5">

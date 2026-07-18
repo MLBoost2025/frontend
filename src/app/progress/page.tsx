@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import MainLayout from "../components/MainLayout";
 import { fetchUserProgress } from "@/lib/api";
 import { UserProgress } from "@/types";
+import PremiumPanel from "../components/PremiumPanel";
 
 export default function ProgressPage() {
   const [progress, setProgress] = useState<UserProgress | null>(null);
@@ -34,6 +35,7 @@ export default function ProgressPage() {
 
   return (
     <MainLayout title="Progress" subtitle="Track consistency, strengths, and weak spots">
+      <PremiumPanel surface="progress" />
       {error ? (
         <p className="rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-sm text-rose-700 dark:text-rose-300">
           {error}
