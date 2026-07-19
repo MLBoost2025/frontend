@@ -39,12 +39,17 @@ describe("same-origin API gateway", () => {
     vi.stubEnv("BACKEND_API_URL", "https://backend.internal/api");
     const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ ok: true }), {
       status: 201,
-      headers: { "content-type": "application/json", "x-request-id": "trace-1" },
+      headers: {
+        "content-type": "application/json",
+        "x-request-id": "trace-1",
+        "x-next-cursor": "665f0c1d2e3a4b5c6d7e8f90",
+      },
     }));
     vi.stubGlobal("fetch", fetchMock);
     const response = await POST(request("https://app.example.com", '{"email":"a@example.com"}'), context);
     expect(response.status).toBe(201);
     expect(response.headers.get("x-request-id")).toBe("trace-1");
+    expect(response.headers.get("x-next-cursor")).toBe("665f0c1d2e3a4b5c6d7e8f90");
     expect(await response.json()).toEqual({ ok: true });
     expect(String(fetchMock.mock.calls[0][0])).toBe("https://backend.internal/api/auth/login");
     expect(fetchMock.mock.calls[0][1]).toEqual(expect.objectContaining({
