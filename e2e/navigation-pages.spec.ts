@@ -1,5 +1,31 @@
 import { expect, test } from "@playwright/test";
 
+test("legal and support policies are publicly reachable", async ({ page }) => {
+  await page.goto("/terms");
+  await expect(page.getByRole("heading", { name: "Terms of use" })).toBeVisible();
+  await page.goto("/privacy");
+  await expect(page.getByRole("heading", { name: "Privacy notice" })).toBeVisible();
+  await page.goto("/refunds");
+  await expect(page.getByRole("heading", { name: "Cancellation and refund policy" })).toBeVisible();
+  await page.goto("/contact");
+  await expect(page.getByRole("heading", { name: "Contact Katalume" })).toBeVisible();
+});
+
+test("checkout requires explicit policy and renewal consent", async ({ page }) => {
+  await page.goto("/login");
+  await page.getByLabel("Email").fill("billing-consent@example.com");
+  await page.getByLabel("Password").fill("password123");
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await expect(page).toHaveURL(/\/problems$/);
+  await page.goto("/pricing");
+  await page.getByRole("button", { name: "Preview plan" }).first().click();
+  const continueButton = page.getByRole("button", { name: "Continue securely" });
+  await expect(continueButton).toBeDisabled();
+  await page.getByRole("checkbox").check();
+  await expect(continueButton).toBeEnabled();
+  await expect(page.getByText(/renews every week until I cancel it/i)).toBeVisible();
+});
+
 test("all primary pages load and are not blank", async ({ page }) => {
   await page.goto("/login");
 

@@ -1,8 +1,13 @@
 import {
   AuthSession,
   BillingCheckout,
+  BillingAdminCustomer,
+  BillingAdminOverview,
   BillingOffersResponse,
+  BillingOperationalAlert,
+  BillingReceiptsResponse,
   BillingSummary,
+  BillingWebhookEvent,
   CompanyTrack,
   Competition,
   CompetitionDetail,
@@ -1238,6 +1243,64 @@ export async function cancelBillingSubscription(subscriptionId: string): Promise
       body: "{}",
     }
   );
+}
+
+export async function fetchBillingReceipts(): Promise<BillingReceiptsResponse> {
+  if (getNormalizedApiMode() === "mock") {
+    return { receipts: [], notice: "These are payment receipts, not GST tax invoices." };
+  }
+  return fetchWithRetry<BillingReceiptsResponse>("/billing/receipts", { method: "GET" });
+}
+
+export async function fetchBillingReceipt(id: string): Promise<{ receipt: BillingReceiptsResponse["receipts"][number]; notice: string }> {
+  return fetchWithRetry<{ receipt: BillingReceiptsResponse["receipts"][number]; notice: string }>(
+    `/billing/receipts/${encodeURIComponent(id)}`,
+    { method: "GET" }
+  );
+}
+
+export async function fetchBillingAdminOverview(): Promise<BillingAdminOverview> {
+  return fetchWithRetry<BillingAdminOverview>("/admin/billing/overview", { method: "GET" });
+}
+
+export async function fetchBillingAdminCustomers(query = ""): Promise<{ customers: BillingAdminCustomer[] }> {
+  const params = new URLSearchParams({ limit: "20" });
+  if (query.trim()) params.set("query", query.trim());
+  return fetchWithRetry<{ customers: BillingAdminCustomer[] }>(
+    `/admin/billing/customers?${params}`,
+    { method: "GET" }
+  );
+}
+
+export async function fetchBillingAdminAlerts(status = "open"): Promise<{ alerts: BillingOperationalAlert[] }> {
+  const params = new URLSearchParams({ status, limit: "100" });
+  return fetchWithRetry<{ alerts: BillingOperationalAlert[] }>(
+    `/admin/billing/alerts?${params}`,
+    { method: "GET" }
+  );
+}
+
+export async function fetchBillingAdminEvents(status = ""): Promise<{ events: BillingWebhookEvent[] }> {
+  const params = new URLSearchParams({ limit: "50" });
+  if (status) params.set("status", status);
+  return fetchWithRetry<{ events: BillingWebhookEvent[] }>(
+    `/admin/billing/events?${params}`,
+    { method: "GET" }
+  );
+}
+
+export async function runBillingReconciliation(): Promise<BillingAdminOverview["latestReconciliation"]> {
+  return fetchWithRetry<NonNullable<BillingAdminOverview["latestReconciliation"]>>(
+    "/admin/billing/reconcile",
+    { method: "POST", body: "{}" }
+  );
+}
+
+export async function resolveBillingAlert(id: string): Promise<BillingOperationalAlert> {
+  return fetchWithRetry(`/admin/billing/alerts/${encodeURIComponent(id)}/resolve`, {
+    method: "POST",
+    body: "{}",
+  });
 }
 
 export async function fetchProblemBySlug(slug: string): Promise<ProblemDetail> {

@@ -163,6 +163,88 @@ export type BillingCheckout =
       environment: "sandbox" | "production";
     };
 
+export interface BillingReceipt {
+  id: string;
+  documentKind: "payment_receipt";
+  label: string;
+  offerKey: string;
+  offerName: string;
+  cadence: BillingCadence | null;
+  amountMinor: number;
+  currency: "INR";
+  status: "captured" | "refunded";
+  occurredAt: string;
+  refundedMinor: number;
+  refundedAt: string | null;
+  providerPaymentReference: string;
+  taxStatus: "pending_legal_review" | "not_applicable" | "final";
+  isTaxInvoice: false;
+}
+
+export interface BillingReceiptsResponse {
+  receipts: BillingReceipt[];
+  notice: string;
+}
+
+export interface BillingOperationalAlert {
+  _id: string;
+  kind: string;
+  severity: "info" | "warning" | "critical";
+  status: "open" | "resolved";
+  resourceType: string;
+  resourceId: string;
+  summary: string;
+  details: Record<string, unknown>;
+  firstDetectedAt: string;
+  lastDetectedAt: string;
+  resolvedAt: string | null;
+}
+
+export interface BillingAdminOverview {
+  counts: {
+    customers: number;
+    activeSubscriptions: number;
+    capturedPurchases: number;
+    openAlerts: number;
+    failedWebhooks: number;
+  };
+  revenue: Array<{ _id: string; amountMinor: number; count: number }>;
+  latestReconciliation: {
+    _id: string;
+    status: string;
+    startedAt: string;
+    finishedAt: string | null;
+    checked: number;
+    drifted: number;
+    providerErrors: number;
+  } | null;
+  configuration: BillingConfiguration & {
+    webhookProcessingEnabled: boolean;
+    reconciliationEnabled: boolean;
+  };
+}
+
+export interface BillingAdminCustomer {
+  id: string;
+  userId: string;
+  billingName: string;
+  billingEmail: string;
+  phoneLastFour: string;
+  subscription: { offerKey: string; status: string; currentPeriodEnd?: string } | null;
+  purchase: { offerKey: string; status: string; capturedAt?: string } | null;
+  updatedAt: string;
+}
+
+export interface BillingWebhookEvent {
+  _id: string;
+  eventType: string;
+  occurredAt: string;
+  status: string;
+  resourceId: string;
+  errorCode: string;
+  createdAt: string;
+}
+
 export interface LoginPayload {
   email: string;
   password: string;

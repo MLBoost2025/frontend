@@ -44,7 +44,7 @@ const FEATURES = [
 const STATS = [
   { value: "ML-first", label: "Problems built for data science, not generic DSA" },
   { value: "Instant", label: "Test-case-level judging on every submit" },
-  { value: "Open", label: "Practice free — no premium wall" },
+  { value: "60 free", label: "A complete launch set before any membership upgrade" },
 ];
 
 export default function Landing() {
@@ -219,8 +219,15 @@ export default function Landing() {
       </main>
 
       {/* Footer */}
-      <footer className="mx-auto flex w-full max-w-6xl flex-col items-center justify-center gap-3 border-t border-black/[0.05] px-5 py-6 text-xs text-zinc-400 dark:border-white/[0.06] sm:flex-row">
+      <footer className="mx-auto flex w-full max-w-6xl flex-col items-center justify-between gap-3 border-t border-black/[0.05] px-5 py-6 text-xs text-zinc-400 dark:border-white/[0.06] sm:flex-row">
         <span>© {`${new Date().getFullYear()}`} Katalume — Practice machine learning into mastery.</span>
+        <nav className="flex flex-wrap justify-center gap-x-4 gap-y-2" aria-label="Company and legal">
+          <Link href="/about">About</Link>
+          <Link href="/terms">Terms</Link>
+          <Link href="/privacy">Privacy</Link>
+          <Link href="/refunds">Refunds</Link>
+          <Link href="/contact">Contact</Link>
+        </nav>
       </footer>
     </div>
   );

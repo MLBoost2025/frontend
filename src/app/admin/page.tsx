@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
 import MainLayout from "../components/MainLayout";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -347,6 +348,9 @@ export default function AdminPage() {
               {(["create", "manage"] as Mode[]).map((item) => <button key={item} type="button" aria-pressed={mode === item} onClick={() => setMode(item)} className={`rounded-full px-3.5 py-2 text-sm font-semibold capitalize transition ${mode === item ? "bg-brand-500 text-white shadow-sm" : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-white"}`}>{item}</button>)}
             </div>
           </div>
+          <Link href="/admin/billing" className="mb-6 inline-flex rounded-full border border-black/10 px-4 py-2 text-sm font-semibold dark:border-white/10">
+            Open billing operations
+          </Link>
           <div className="max-w-3xl">
             {mode === "manage" ? <ManageContent key={type} type={type} /> : type === "problem" ? <ProblemForm /> : type === "contest" ? <ContestForm /> : <TrackForm />}
           </div>

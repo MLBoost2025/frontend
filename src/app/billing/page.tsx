@@ -1,16 +1,26 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CalendarClock, Crown, Gem, Loader2, ShieldCheck } from "lucide-react";
+import { CalendarClock, Crown, FileText, Gem, Loader2, ShieldCheck } from "lucide-react";
 import MainLayout from "../components/MainLayout";
 import { useBilling } from "@/context/BillingContext";
-import { cancelBillingSubscription } from "@/lib/api";
+import { cancelBillingSubscription, fetchBillingReceipts } from "@/lib/api";
+import { BillingReceipt } from "@/types";
 
 export default function BillingPage() {
   const { summary, tier, isLoading, refresh } = useBilling();
   const [isCancelling, setIsCancelling] = useState(false);
   const [message, setMessage] = useState("");
+  const [receipts, setReceipts] = useState<BillingReceipt[]>([]);
+  const [receiptsLoading, setReceiptsLoading] = useState(true);
+
+  useEffect(() => {
+    void fetchBillingReceipts()
+      .then((response) => setReceipts(response.receipts))
+      .catch(() => setMessage("Payment receipts could not be loaded."))
+      .finally(() => setReceiptsLoading(false));
+  }, []);
 
   async function cancel() {
     if (!summary?.subscription) return;
@@ -82,6 +92,39 @@ export default function BillingPage() {
             <p className="mt-5 text-sm text-zinc-500">No recurring subscription is attached to this account.</p>
           )}
         </article>
+      </section>
+      <section className="card p-5" aria-labelledby="receipts-heading">
+        <div className="flex items-center gap-2">
+          <FileText className="h-4 w-4 text-brand-500" />
+          <h2 id="receipts-heading" className="text-sm font-semibold text-zinc-900 dark:text-white">Payment receipts</h2>
+        </div>
+        <p className="mt-2 text-xs text-zinc-500">
+          These records confirm verified payments. They are not GST tax invoices unless explicitly labelled otherwise.
+        </p>
+        {receiptsLoading ? (
+          <p className="mt-5 text-sm text-zinc-500">Loading receipts…</p>
+        ) : receipts.length === 0 ? (
+          <p className="mt-5 text-sm text-zinc-500">No verified payments are attached to this account.</p>
+        ) : (
+          <div className="mt-5 overflow-x-auto">
+            <table className="w-full min-w-[620px] text-left text-sm">
+              <thead className="text-xs uppercase tracking-wide text-zinc-500">
+                <tr><th className="pb-3">Date</th><th className="pb-3">Membership</th><th className="pb-3">Reference</th><th className="pb-3">Amount</th><th className="pb-3">Status</th></tr>
+              </thead>
+              <tbody className="divide-y divide-black/[0.06] dark:divide-white/[0.07]">
+                {receipts.map((receipt) => (
+                  <tr key={receipt.id}>
+                    <td className="py-3">{new Date(receipt.occurredAt).toLocaleDateString("en-IN")}</td>
+                    <td className="py-3 font-medium">{receipt.offerName}</td>
+                    <td className="py-3 font-mono text-xs">{receipt.providerPaymentReference}</td>
+                    <td className="py-3">{new Intl.NumberFormat("en-IN", { style: "currency", currency: receipt.currency }).format(receipt.amountMinor / 100)}</td>
+                    <td className="py-3 capitalize">{receipt.status}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </section>
       {message ? <p role="status" className="rounded-xl bg-brand-500/10 px-4 py-3 text-sm text-brand-700 dark:text-brand-200">{message}</p> : null}
     </MainLayout>

@@ -28,6 +28,7 @@ export default function PricingPage() {
   const [catalog, setCatalog] = useState<BillingOffersResponse | null>(null);
   const [selected, setSelected] = useState<BillingOffer | null>(null);
   const [phone, setPhone] = useState("");
+  const [acceptedPolicies, setAcceptedPolicies] = useState(false);
   const [state, setState] = useState<"idle" | "opening" | "error">("idle");
   const [message, setMessage] = useState("");
 
@@ -48,6 +49,11 @@ export default function PricingPage() {
   async function beginCheckout(event: React.FormEvent) {
     event.preventDefault();
     if (!selected) return;
+    if (!acceptedPolicies) {
+      setState("error");
+      setMessage("Review and accept the billing policies before continuing.");
+      return;
+    }
     if (!catalog?.configuration.checkoutEnabled) {
       setState("error");
       setMessage("Secure checkout is staged but not active yet. No charge was made.");
@@ -115,7 +121,12 @@ export default function PricingPage() {
             </ul>
             <button
               type="button"
-              onClick={() => { setSelected(offer); setState("idle"); setMessage(""); }}
+              onClick={() => {
+                setSelected(offer);
+                setAcceptedPolicies(false);
+                setState("idle");
+                setMessage("");
+              }}
               disabled={tier === "lumus"}
               className="mt-6 rounded-full bg-zinc-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-40 dark:bg-white dark:text-zinc-950"
             >
@@ -137,24 +148,47 @@ export default function PricingPage() {
                 {money(selected.amountMinor)} {cadenceCopy[selected.cadence]}. Payment details stay with Cashfree.
               </p>
             </div>
-            <form onSubmit={beginCheckout} className="flex w-full max-w-lg flex-col gap-3 sm:flex-row">
-              <label className="flex-1">
-                <span className="sr-only">Indian mobile number</span>
+            <form onSubmit={beginCheckout} className="w-full max-w-xl space-y-3">
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <label className="flex-1">
+                  <span className="sr-only">Indian mobile number</span>
+                  <input
+                    type="tel"
+                    inputMode="numeric"
+                    autoComplete="tel-national"
+                    value={phone}
+                    onChange={(event) => setPhone(event.target.value)}
+                    placeholder="10-digit Indian mobile"
+                    pattern="[6-9][0-9]{9}"
+                    required
+                    className="w-full rounded-full border border-black/10 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-brand-500 dark:border-white/10 dark:bg-white/[0.05]"
+                  />
+                </label>
+                <button
+                  type="submit"
+                  disabled={state === "opening" || !acceptedPolicies}
+                  className="btn-primary justify-center disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {state === "opening" ? <><Loader2 className="h-4 w-4 animate-spin" /> Opening…</> : "Continue securely"}
+                </button>
+              </div>
+              <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-black/[0.07] p-3 text-xs leading-relaxed text-zinc-600 dark:border-white/[0.08] dark:text-zinc-300">
                 <input
-                  type="tel"
-                  inputMode="numeric"
-                  autoComplete="tel-national"
-                  value={phone}
-                  onChange={(event) => setPhone(event.target.value)}
-                  placeholder="10-digit Indian mobile"
-                  pattern="[6-9][0-9]{9}"
-                  required
-                  className="w-full rounded-full border border-black/10 bg-white px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-brand-500 dark:border-white/10 dark:bg-white/[0.05]"
+                  type="checkbox"
+                  checked={acceptedPolicies}
+                  onChange={(event) => setAcceptedPolicies(event.target.checked)}
+                  className="mt-0.5 h-4 w-4 accent-brand-500"
                 />
+                <span>
+                  I agree to the <a className="font-semibold underline" href="/terms" target="_blank">Terms</a>,{" "}
+                  <a className="font-semibold underline" href="/billing-terms" target="_blank">Billing terms</a>,{" "}
+                  <a className="font-semibold underline" href="/refunds" target="_blank">Refund policy</a>, and{" "}
+                  <a className="font-semibold underline" href="/privacy" target="_blank">Privacy notice</a>.{" "}
+                  {selected.cadence === "lifetime"
+                    ? "Lumus is a one-time purchase for the commercial lifetime of Katalume."
+                    : `This Plus plan renews ${cadenceCopy[selected.cadence]} until I cancel it.`}
+                </span>
               </label>
-              <button type="submit" disabled={state === "opening"} className="btn-primary justify-center disabled:opacity-50">
-                {state === "opening" ? <><Loader2 className="h-4 w-4 animate-spin" /> Opening…</> : "Continue securely"}
-              </button>
             </form>
           </div>
           {message ? <p role="alert" className="mt-4 rounded-xl bg-amber-500/10 px-4 py-3 text-sm text-amber-700 dark:text-amber-200">{message}</p> : null}
