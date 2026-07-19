@@ -245,4 +245,28 @@ describe("live API contract", () => {
     const profile = await fetchUserProfile();
     expect(profile.topicProgress.find((topic) => topic.topic === "NLP")?.solved).toBeGreaterThanOrEqual(1);
   });
+
+  it("follows the X-Next-Cursor header until the whole catalog is fetched", async () => {
+    const pageResponse = (slugs: string[], nextCursor?: string): Response => ({
+      ok: true,
+      status: 200,
+      headers: new Headers(nextCursor ? { "x-next-cursor": nextCursor } : {}),
+      text: vi.fn().mockResolvedValue(JSON.stringify(
+        slugs.map((slug, index) => ({ _id: `id-${slug}`, slug, title: slug, difficulty: "Easy", tags: [], acceptanceRate: index }))
+      )),
+    } as unknown as Response);
+
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(pageResponse(["problem-a", "problem-b"], "cursor-1"))
+      .mockResolvedValueOnce(pageResponse(["problem-c"]));
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { fetchProblems } = await import("./api");
+    const problems = await fetchProblems();
+
+    expect(problems.map((problem) => problem.slug)).toEqual(["problem-a", "problem-b", "problem-c"]);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(String(fetchMock.mock.calls[0][0])).toContain("/problems?limit=200");
+    expect(String(fetchMock.mock.calls[1][0])).toContain("before=cursor-1");
+  });
 });

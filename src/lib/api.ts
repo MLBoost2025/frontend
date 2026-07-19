@@ -517,7 +517,8 @@ export class ApiError extends Error {
 async function fetchWithRetry<T>(
   path: string,
   init?: RequestInit,
-  retries = API_RETRY_COUNT
+  retries = API_RETRY_COUNT,
+  onResponse?: (response: Response) => void
 ): Promise<T> {
   const method = (init?.method || "GET").toUpperCase();
   // Only retry idempotent methods. Retrying POST (e.g. /submissions) on a
@@ -581,6 +582,7 @@ async function fetchWithRetry<T>(
       }
 
       const text = await response.text();
+      onResponse?.(response);
       return text ? parseJsonSafely<T>(text) : ({} as T);
     } catch (error) {
       clearTimeout(timeoutId);
@@ -774,10 +776,31 @@ function mockFetchProblemBySlug(slug: string): ProblemDetail {
   return clone(problem);
 }
 
+// The backend caps each list page at 200 problems and signals more pages via
+// an X-Next-Cursor response header (an _id cursor for ?before=).
+const PROBLEMS_PAGE_LIMIT = 200;
+const PROBLEMS_MAX_PAGES = 10;
+
 async function liveFetchProblems(tags: string[] = []): Promise<Problem[]> {
-  const query = tags.length ? `?tags=${encodeURIComponent(tags.join(","))}` : "";
-  const data = await fetchWithRetry<unknown[]>(`/problems${query}`, { method: "GET" });
-  return data.map((entry) => toProblemFromLive(entry));
+  const tagsQuery = tags.length ? `&tags=${encodeURIComponent(tags.join(","))}` : "";
+  const all: Problem[] = [];
+  let cursor: string | null = null;
+  for (let page = 0; page < PROBLEMS_MAX_PAGES; page += 1) {
+    const cursorQuery = cursor ? `&before=${encodeURIComponent(cursor)}` : "";
+    let nextCursor: string | null = null;
+    const data = await fetchWithRetry<unknown[]>(
+      `/problems?limit=${PROBLEMS_PAGE_LIMIT}${tagsQuery}${cursorQuery}`,
+      { method: "GET" },
+      API_RETRY_COUNT,
+      (response) => {
+        nextCursor = response.headers?.get("x-next-cursor") ?? null;
+      }
+    );
+    all.push(...data.map((entry) => toProblemFromLive(entry)));
+    cursor = nextCursor;
+    if (!cursor || data.length === 0) break;
+  }
+  return all;
 }
 
 async function liveFetchProblemBySlug(slug: string): Promise<ProblemDetail> {

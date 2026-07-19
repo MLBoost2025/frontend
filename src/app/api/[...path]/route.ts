@@ -12,6 +12,7 @@ const responseHeaders = [
   "x-request-id",
   "ratelimit",
   "ratelimit-policy",
+  "x-next-cursor",
 ];
 
 async function forward(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
